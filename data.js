@@ -116,8 +116,7 @@ const DATA = (() => {
         rows.push([`Week ${week.week}`, week.theme, q.text.substring(0, 80), jStr, lStr]);
       });
     });
-    return rows.map(r => r.join('\t')).join('
-');
+    return rows.map(r => r.join('\t')).join('\n');
   }
 
   // ── Build agenda prompt ─────────────────────────────────────
