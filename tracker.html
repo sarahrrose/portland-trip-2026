@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Portland Trip — What's In the Running 🗺️</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--forest:#1a3a2a;--moss:#2d5a3d;--sage:#7a9e82;--fern:#b5c9b8;--cream:#f5f0e8;--warm:#e8dcc8;--rust:#c4622d;--gold:#d4a843;--text:#1a1a18;--muted:#6b6b5e;--radius:16px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;padding-bottom:40px;}
+  .header{background:var(--forest);padding:28px 20px 22px;text-align:center;}
+  .header-emoji{font-size:36px;margin-bottom:8px;}
+  .header h1{font-family:'Playfair Display',serif;font-size:22px;color:#fff;margin-bottom:4px;}
+  .header p{color:var(--fern);font-size:14px;}
+  .content{padding:16px;max-width:600px;margin:0 auto;}
+  .section-label{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:24px 0 10px 4px;}
+  .progress-row{display:flex;gap:12px;margin-bottom:8px;}
+  .progress-card{flex:1;background:#fff;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:0 2px 8px rgba(26,58,42,0.06);}
+  .progress-card .name{font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .progress-card .count{font-size:28px;font-weight:700;color:var(--forest);}
+  .progress-card .total{font-size:12px;color:var(--muted);}
+  .place-card{background:#fff;border-radius:var(--radius);padding:16px 20px;margin-bottom:10px;box-shadow:0 2px 8px rgba(26,58,42,0.06);display:flex;align-items:center;gap:14px;}
+  .place-icon{font-size:24px;flex-shrink:0;}
+  .place-name{font-size:15px;font-weight:500;flex:1;}
+  .hearts{display:flex;gap:4px;}
+  .heart{font-size:18px;}
+  .empty-msg{text-align:center;padding:40px 20px;color:var(--muted);}
+  .empty-msg .emoji{font-size:48px;margin-bottom:12px;}
+  .home-link{display:block;text-align:center;margin:24px 16px 0;color:var(--muted);font-size:13px;text-decoration:none;}
+  .note{background:var(--warm);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-emoji">🗺️</div>
+  <h1>What's In the Running</h1>
+  <p>Portland Trip · July 31 – August 4, 2026</p>
+</div>
+
+<div class="content">
+  <p class="note">These are the places you've both expressed interest in — no individual attribution. Sarah sees everything when she generates the itinerary.</p>
+
+  <div class="section-label">Survey Progress</div>
+  <div class="progress-row">
+    <div class="progress-card">
+      <div class="name">🌸 Jessica</div>
+      <div class="count" id="jessica-count">—</div>
+      <div class="total" id="jessica-total">weeks complete</div>
+    </div>
+    <div class="progress-card">
+      <div class="name">⭐ Libby</div>
+      <div class="count" id="libby-count">—</div>
+      <div class="total" id="libby-total">weeks complete</div>
+    </div>
+  </div>
+
+  <div class="section-label">Places In the Running</div>
+  <div id="places-list"></div>
+
+  <a href="index.html" class="home-link">← Back to home</a>
+</div>
+
+<script src="questions.js"></script>
+<script src="data.js"></script>
+<script>
+function init() {
+  // Progress
+  ['jessica','libby'].forEach(user => {
+    const completed = DATA.completedWeeks(user).length;
+    const total = QUESTIONS.filter(w => DATA.isWeekUnlocked(w.week)).length;
+    document.getElementById(`${user}-count`).textContent = completed;
+    document.getElementById(`${user}-total`).textContent = `of ${total} week${total !== 1 ? 's' : ''} complete`;
+  });
+
+  // Places
+  const places = DATA.getInRunningPlaces();
+  const list = document.getElementById('places-list');
+
+  if (places.length === 0) {
+    list.innerHTML = `<div class="empty-msg"><div class="emoji">🌱</div><p>No answers yet — check back after the first survey week!</p></div>`;
+    return;
+  }
+
+  const icons = ['🗻','🌊','🍩','📚','🎭','🌲','🍷','🏛️','🌸','🎨','🎪','🍺','🎬'];
+  list.innerHTML = places.map((p, i) => `
+    <div class="place-card">
+      <div class="place-icon">${icons[i % icons.length]}</div>
+      <div class="place-name">${p.place}</div>
+      <div class="hearts">${'💚'.repeat(p.yes)}${'🤍'.repeat(Math.max(0, 2 - p.yes))}</div>
+    </div>
+  `).join('');
+}
+
+init();
+</script>
+</body>
+</html>

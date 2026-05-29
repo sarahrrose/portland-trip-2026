@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Portland Trip — Admin 🔐</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--forest:#1a3a2a;--moss:#2d5a3d;--sage:#7a9e82;--fern:#b5c9b8;--cream:#f5f0e8;--warm:#e8dcc8;--rust:#c4622d;--gold:#d4a843;--text:#1a1a18;--muted:#6b6b5e;--radius:16px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;padding-bottom:40px;}
+  .header{background:var(--forest);padding:28px 20px 22px;text-align:center;}
+  .header-emoji{font-size:36px;margin-bottom:8px;}
+  .header h1{font-family:'Playfair Display',serif;font-size:22px;color:#fff;margin-bottom:4px;}
+  .header p{color:var(--fern);font-size:14px;}
+  .pin-screen{max-width:360px;margin:40px auto;padding:0 16px;}
+  .pin-card{background:#fff;border-radius:20px;padding:32px 24px;box-shadow:0 4px 24px rgba(26,58,42,0.10);text-align:center;}
+  .pin-card h2{font-family:'Playfair Display',serif;font-size:20px;color:var(--forest);margin-bottom:8px;}
+  .pin-card p{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5;}
+  .pin-input{width:100%;padding:14px;border-radius:12px;border:2px solid var(--fern);font-size:20px;text-align:center;letter-spacing:0.3em;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:12px;}
+  .pin-input:focus{border-color:var(--sage);}
+  .btn{width:100%;padding:14px;border-radius:12px;background:var(--forest);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;border:none;cursor:pointer;margin-bottom:8px;}
+  .btn:hover{background:var(--moss);}
+  .btn-danger{background:var(--rust);}
+  .btn-secondary{background:transparent;color:var(--muted);border:1px solid var(--fern);}
+  .error{color:var(--rust);font-size:13px;margin-top:8px;}
+  /* Admin panel */
+  .admin-content{display:none;padding:16px;max-width:600px;margin:0 auto;}
+  .section-label{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:24px 0 10px 4px;}
+  .card{background:#fff;border-radius:var(--radius);padding:20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(26,58,42,0.06);}
+  .card-title{font-weight:600;font-size:15px;color:var(--forest);margin-bottom:6px;}
+  .card-body{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+  .agenda-btn{display:block;width:100%;padding:16px;border-radius:12px;background:var(--gold);color:var(--forest);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;border:none;cursor:pointer;}
+  .agenda-btn:hover{filter:brightness(0.95);}
+  .export-box{width:100%;min-height:120px;padding:12px;border-radius:10px;border:2px solid var(--fern);font-size:11px;font-family:monospace;background:#fafafa;resize:vertical;}
+  .copy-btn{margin-top:8px;padding:10px 16px;border-radius:8px;background:var(--forest);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;border:none;cursor:pointer;}
+  /* All answers table */
+  .answers-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .answers-table th{background:var(--warm);padding:8px 10px;text-align:left;color:var(--forest);font-weight:600;}
+  .answers-table td{padding:8px 10px;border-bottom:1px solid var(--fern);vertical-align:top;}
+  .answers-table tr:hover td{background:var(--cream);}
+  .spinner{display:inline-block;width:20px;height:20px;border:3px solid var(--fern);border-top-color:var(--forest);border-radius:50%;animation:spin 0.8s linear infinite;margin-right:8px;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #generating-indicator{display:none;text-align:center;color:var(--muted);font-size:14px;padding:16px;}
+  .nav-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;}
+  .nav-link{padding:10px 16px;border-radius:10px;background:#fff;color:var(--forest);font-size:13px;text-decoration:none;border:1px solid var(--fern);}
+  /* Custom Q */
+  .custom-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+  .custom-input{flex:1;padding:10px;border-radius:8px;border:2px solid var(--fern);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;}
+  .remove-btn{padding:8px 12px;border-radius:8px;background:var(--rust);color:#fff;border:none;cursor:pointer;font-size:13px;}
+  .week-select{padding:10px;border-radius:8px;border:2px solid var(--fern);font-size:13px;font-family:'DM Sans',sans-serif;background:#fff;}
+  .add-btn{padding:10px 16px;border-radius:8px;background:var(--moss);color:#fff;border:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-emoji">🔐</div>
+  <h1>Admin Panel</h1>
+  <p>Portland Trip · Sarah Only</p>
+</div>
+
+<!-- PIN Setup -->
+<div id="setup-mode" class="pin-screen" style="display:none">
+  <div class="pin-card">
+    <h2>Set Your PIN</h2>
+    <p>Create a 4-digit PIN to protect the admin panel. You'll need this every time.</p>
+    <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pin-setup-input" placeholder="••••">
+    <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pin-setup-confirm" placeholder="Confirm PIN">
+    <button class="btn" onclick="setupPin()">Set PIN & Enter</button>
+    <div class="error" id="setup-error"></div>
+  </div>
+</div>
+
+<!-- PIN Login -->
+<div id="login-mode" class="pin-screen" style="display:none">
+  <div class="pin-card">
+    <h2>Admin Access</h2>
+    <p>Enter your PIN to access survey data and generate the itinerary.</p>
+    <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pin-login-input" placeholder="••••" onkeydown="if(event.key==='Enter')checkPin()">
+    <button class="btn" onclick="checkPin()">Enter</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- Admin Content -->
+<div class="admin-content" id="admin-content">
+
+  <div class="section-label">Survey Progress</div>
+  <div class="card">
+    <div class="card-title">Completion Status</div>
+    <div id="progress-summary" class="card-body"></div>
+  </div>
+
+  <div class="section-label">All Answers</div>
+  <div class="card" style="overflow-x:auto;">
+    <div class="card-title">Full Response Table</div>
+    <table class="answers-table" id="answers-table">
+      <thead><tr><th>Week</th><th>Question</th><th>Jessica</th><th>Libby</th></tr></thead>
+      <tbody id="answers-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="section-label">Export</div>
+  <div class="card">
+    <div class="card-title">Google Sheets Export</div>
+    <div class="card-body">Click Generate, then copy and paste into your spreadsheet starting at cell A1.</div>
+    <button class="copy-btn" onclick="generateExport()">Generate Export</button>
+    <textarea class="export-box" id="export-box" style="margin-top:10px;" readonly placeholder="Click Generate Export above..."></textarea>
+    <button class="copy-btn" onclick="copyExport()">Copy to Clipboard</button>
+  </div>
+
+  <div class="section-label">Custom Questions</div>
+  <div class="card">
+    <div class="card-title">Add a Custom Yes/No Question</div>
+    <div class="card-body">Custom questions appear in the survey alongside the pre-set ones. They're for specific places or activities you want to gauge interest in.</div>
+    <div id="custom-questions-list"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <input type="text" class="custom-input" id="custom-text" placeholder="Question text (e.g. 'Interested in X?')">
+      <select class="week-select" id="custom-week">
+        <option value="">Week…</option>
+        ${Array.from({length:11},(_,i)=>`<option value="${i+1}">Week ${i+1}</option>`).join('')}
+      </select>
+      <button class="add-btn" onclick="addCustomQuestion()">Add</button>
+    </div>
+  </div>
+
+  <div class="section-label">Generate Itinerary</div>
+  <div class="card">
+    <div class="card-title">Generate the Portland Agenda</div>
+    <div class="card-body">When you have enough responses (mid-August), click below to generate a personalized day-by-day itinerary using AI. The result will appear on the Agenda page.</div>
+    <button class="agenda-btn" id="generate-btn" onclick="generateAgenda()">🗺️ Generate the Portland Itinerary →</button>
+    <div id="generating-indicator"><div class="spinner"></div>Building the perfect Portland itinerary…</div>
+  </div>
+
+  <div class="section-label">Danger Zone</div>
+  <div class="card">
+    <div class="card-title">Reset All Survey Data</div>
+    <div class="card-body" style="color:var(--rust)">Permanently erases all answers. Only use for testing.</div>
+    <button class="btn btn-danger" onclick="resetData()">⚠️ Reset All Data</button>
+  </div>
+
+  <div class="nav-links">
+    <a href="tracker.html" class="nav-link">🗺️ Tracker</a>
+    <a href="jessica.html" class="nav-link">🌸 Jessica</a>
+    <a href="libby.html"   class="nav-link">⭐ Libby</a>
+    <a href="agenda.html"  class="nav-link">📋 Agenda</a>
+    <a href="index.html"   class="nav-link">🏠 Home</a>
+  </div>
+</div>
+
+<script src="questions.js"></script>
+<script src="data.js"></script>
+<script>
+
+// ── PIN flow ───────────────────────────────────────────────
+function init() {
+  const pin = DATA.getPin();
+  if (!pin) {
+    document.getElementById('setup-mode').style.display = 'block';
+  } else {
+    document.getElementById('login-mode').style.display = 'block';
+  }
+}
+
+function setupPin() {
+  const p1 = document.getElementById('pin-setup-input').value;
+  const p2 = document.getElementById('pin-setup-confirm').value;
+  if (p1.length < 4) { document.getElementById('setup-error').textContent = 'PIN must be 4 digits.'; return; }
+  if (p1 !== p2)     { document.getElementById('setup-error').textContent = "PINs don't match."; return; }
+  DATA.setPin(p1);
+  showAdmin();
+}
+
+function checkPin() {
+  const input = document.getElementById('pin-login-input').value;
+  if (DATA.checkPin(input)) {
+    showAdmin();
+  } else {
+    document.getElementById('login-error').textContent = 'Incorrect PIN. Try again.';
+  }
+}
+
+function showAdmin() {
+  document.getElementById('setup-mode').style.display = 'none';
+  document.getElementById('login-mode').style.display = 'none';
+  document.getElementById('admin-content').style.display = 'block';
+  populateAdmin();
+}
+
+// ── Populate admin ─────────────────────────────────────────
+function populateAdmin() {
+  // Progress
+  const summary = document.getElementById('progress-summary');
+  const jComplete = DATA.completedWeeks('jessica').length;
+  const lComplete = DATA.completedWeeks('libby').length;
+  const total = QUESTIONS.filter(w => DATA.isWeekUnlocked(w.week)).length;
+  summary.innerHTML = `🌸 Jessica: ${jComplete}/${total} weeks · ⭐ Libby: ${lComplete}/${total} weeks`;
+
+  // Answers table
+  const tbody = document.getElementById('answers-tbody');
+  tbody.innerHTML = QUESTIONS.map(week =>
+    week.questions.map(q => {
+      const jVal = DATA.getAnswer('jessica', q.id);
+      const lVal = DATA.getAnswer('libby', q.id);
+      const fmt = v => !v && v !== 0 ? '<span style="color:#ccc">—</span>' : (Array.isArray(v) ? v.join(', ') : v);
+      return `<tr><td>Wk ${week.week}</td><td>${q.text.substring(0,60)}${q.text.length>60?'…':''}</td><td>${fmt(jVal)}</td><td>${fmt(lVal)}</td></tr>`;
+    }).join('')
+  ).join('');
+
+  // Custom questions
+  renderCustomQuestions();
+}
+
+// ── Custom questions ───────────────────────────────────────
+function renderCustomQuestions() {
+  const list = DATA.getCustomQuestions();
+  const el = document.getElementById('custom-questions-list');
+  if (list.length === 0) { el.innerHTML = '<p style="font-size:13px;color:var(--muted);margin-bottom:12px;">No custom questions yet.</p>'; return; }
+  el.innerHTML = list.map((q, i) =>
+    `<div class="custom-row">
+      <span style="font-size:13px;flex:1">${q.text} (Week ${q.week})</span>
+      <button class="remove-btn" onclick="removeCustom(${i})">Remove</button>
+    </div>`
+  ).join('');
+}
+
+function addCustomQuestion() {
+  const text = document.getElementById('custom-text').value.trim();
+  const week = document.getElementById('custom-week').value;
+  if (!text || !week) { alert('Please fill in both the question text and week.'); return; }
+  const list = DATA.getCustomQuestions();
+  list.push({ text, week: parseInt(week), id: `custom_${Date.now()}` });
+  DATA.saveCustomQuestions(list);
+  document.getElementById('custom-text').value = '';
+  document.getElementById('custom-week').value = '';
+  renderCustomQuestions();
+}
+
+function removeCustom(idx) {
+  const list = DATA.getCustomQuestions();
+  list.splice(idx, 1);
+  DATA.saveCustomQuestions(list);
+  renderCustomQuestions();
+}
+
+// ── Export ─────────────────────────────────────────────────
+function generateExport() {
+  document.getElementById('export-box').value = DATA.generateExport();
+}
+
+function copyExport() {
+  const box = document.getElementById('export-box');
+  box.select();
+  document.execCommand('copy');
+  alert('Copied to clipboard!');
+}
+
+// ── Generate agenda ────────────────────────────────────────
+async function generateAgenda() {
+  const btn = document.getElementById('generate-btn');
+  const indicator = document.getElementById('generating-indicator');
+  btn.style.display = 'none';
+  indicator.style.display = 'block';
+
+  const prompt = DATA.buildAgendaPrompt();
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content.map(c => c.text || '').join('');
+    DATA.saveAgenda(text);
+    window.location.href = 'agenda.html';
+  } catch (err) {
+    indicator.style.display = 'none';
+    btn.style.display = 'block';
+    alert('Error generating agenda: ' + err.message);
+  }
+}
+
+// ── Reset ──────────────────────────────────────────────────
+function resetData() {
+  if (!confirm('This will permanently erase all survey data. Are you sure?')) return;
+  if (!confirm('Really sure? This cannot be undone.')) return;
+  DATA.resetAll();
+  alert('Data cleared.');
+  populateAdmin();
+}
+
+init();
+</script>
+</body>
+</html>

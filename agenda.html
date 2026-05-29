@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Portland Trip — The Itinerary 🗺️</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--forest:#1a3a2a;--moss:#2d5a3d;--sage:#7a9e82;--fern:#b5c9b8;--cream:#f5f0e8;--warm:#e8dcc8;--rust:#c4622d;--gold:#d4a843;--text:#1a1a18;--muted:#6b6b5e;--radius:16px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;padding-bottom:80px;}
+  .header{background:var(--forest);padding:28px 20px 22px;text-align:center;}
+  .header-emoji{font-size:36px;margin-bottom:8px;}
+  .header h1{font-family:'Playfair Display',serif;font-size:22px;color:#fff;margin-bottom:4px;}
+  .header p{color:var(--fern);font-size:14px;}
+  .content{padding:16px;max-width:640px;margin:0 auto;}
+  .day-section{margin-bottom:28px;}
+  .day-header{font-family:'Playfair Display',serif;font-size:20px;color:var(--forest);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--fern);}
+  .activity-card{background:#fff;border-radius:var(--radius);padding:18px 20px;margin-bottom:10px;box-shadow:0 2px 8px rgba(26,58,42,0.06);cursor:pointer;transition:box-shadow 0.15s;}
+  .activity-card:hover{box-shadow:0 4px 16px rgba(26,58,42,0.12);}
+  .activity-card.editing{border:2px solid var(--sage);}
+  .time-label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;}
+  .activity-text{font-size:15px;line-height:1.6;color:var(--text);}
+  .activity-edit{width:100%;min-height:80px;padding:8px;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;color:var(--text);resize:vertical;background:transparent;}
+  .edit-hint{font-size:11px;color:var(--muted);margin-top:6px;}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-state .emoji{font-size:64px;margin-bottom:16px;}
+  .empty-state h2{font-family:'Playfair Display',serif;font-size:20px;color:var(--forest);margin-bottom:8px;}
+  .empty-state p{font-size:14px;line-height:1.6;margin-bottom:20px;}
+  .empty-state a{color:var(--sage);text-decoration:none;font-weight:500;}
+  .toolbar{position:fixed;bottom:0;left:0;right:0;background:var(--cream);border-top:1px solid var(--fern);padding:12px 16px;display:flex;gap:10px;}
+  .tool-btn{flex:1;padding:12px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;border:none;cursor:pointer;transition:background 0.15s;}
+  .tool-btn-primary{background:var(--forest);color:#fff;}
+  .tool-btn-secondary{background:#fff;color:var(--muted);border:1px solid var(--fern);}
+  .raw-text{width:100%;min-height:200px;padding:16px;border-radius:var(--radius);border:2px solid var(--fern);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;background:#fff;resize:vertical;margin-top:12px;}
+  .section-label{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:24px 0 10px 4px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-emoji">🗺️</div>
+  <h1>The Portland Itinerary</h1>
+  <p>July 31 – August 4, 2026</p>
+</div>
+
+<div class="content" id="content"></div>
+
+<div class="toolbar" id="toolbar" style="display:none">
+  <button class="tool-btn tool-btn-secondary" onclick="copyText()">📋 Copy Text</button>
+  <button class="tool-btn tool-btn-primary" onclick="saveEdits()">💾 Save Edits</button>
+</div>
+
+<script src="questions.js"></script>
+<script src="data.js"></script>
+<script>
+let agenda = '';
+let editMode = false;
+
+function init() {
+  agenda = DATA.getAgenda();
+  if (!agenda) {
+    renderEmpty();
+  } else {
+    renderAgenda(agenda);
+    document.getElementById('toolbar').style.display = 'flex';
+  }
+}
+
+function renderEmpty() {
+  document.getElementById('content').innerHTML = `
+    <div class="empty-state">
+      <div class="emoji">🌲</div>
+      <h2>No Itinerary Yet</h2>
+      <p>The itinerary will appear here once Sarah generates it from the admin panel. Check back in mid-August!</p>
+      <a href="index.html">← Back to home</a>
+    </div>`;
+}
+
+function renderAgenda(text) {
+  const content = document.getElementById('content');
+
+  // Parse the text into day sections
+  const dayPattern = /DAY\s+\d+[^\n]*/gi;
+  const lines = text.split('\n');
+
+  let html = '';
+  let currentDay = null;
+  let currentItems = [];
+
+  function flushDay() {
+    if (!currentDay) return;
+    html += `<div class="day-section"><div class="day-header">${currentDay}</div>`;
+    currentItems.forEach((item, idx) => {
+      if (!item.trim()) return;
+      // Detect time markers
+      const timeMatch = item.match(/^(Morning|Afternoon|Evening|Night|Breakfast|Lunch|Dinner|[0-9]{1,2}:[0-9]{2})/i);
+      const timeLabel = timeMatch ? timeMatch[0] : '';
+      const itemText = timeLabel ? item.substring(timeLabel.length).replace(/^[:\s—-]+/, '') : item;
+      html += `<div class="activity-card" onclick="toggleEdit(this)">
+        ${timeLabel ? `<div class="time-label">${timeLabel}</div>` : ''}
+        <div class="activity-text">${itemText || item}</div>
+        <div class="edit-hint" style="display:none">Tap to edit · tap outside to save</div>
+      </div>`;
+    });
+    html += `</div>`;
+    currentItems = [];
+  }
+
+  lines.forEach(line => {
+    if (/^DAY\s+\d+/i.test(line.trim())) {
+      flushDay();
+      currentDay = line.trim();
+    } else if (currentDay && line.trim()) {
+      currentItems.push(line.trim());
+    }
+  });
+  flushDay();
+
+  if (!html) {
+    // Fallback: show as editable raw text
+    html = `<div class="section-label">Itinerary</div>
+      <textarea class="raw-text" id="raw-edit" onchange="agenda=this.value">${text}</textarea>`;
+  }
+
+  content.innerHTML = html;
+}
+
+function toggleEdit(card) {
+  const textEl = card.querySelector('.activity-text');
+  const hintEl = card.querySelector('.edit-hint');
+  if (card.classList.contains('editing')) return;
+
+  card.classList.add('editing');
+  const original = textEl.textContent;
+  const timeLabel = card.querySelector('.time-label');
+  const timeLabelText = timeLabel ? timeLabel.textContent + ' ' : '';
+
+  textEl.style.display = 'none';
+  const ta = document.createElement('textarea');
+  ta.className = 'activity-edit';
+  ta.value = original;
+  card.appendChild(ta);
+  ta.focus();
+  hintEl.style.display = 'block';
+
+  ta.addEventListener('blur', () => {
+    textEl.textContent = ta.value;
+    textEl.style.display = '';
+    ta.remove();
+    card.classList.remove('editing');
+    hintEl.style.display = 'none';
+  });
+}
+
+function saveEdits() {
+  // Reconstruct text from cards
+  const days = document.querySelectorAll('.day-section');
+  let newText = '';
+  days.forEach(day => {
+    newText += day.querySelector('.day-header').textContent + '\n';
+    day.querySelectorAll('.activity-card').forEach(card => {
+      const timeLabel = card.querySelector('.time-label');
+      const actText = card.querySelector('.activity-text');
+      if (timeLabel) newText += timeLabel.textContent + ': ';
+      if (actText) newText += actText.textContent + '\n';
+    });
+    newText += '\n';
+  });
+
+  // Check for raw textarea fallback
+  const rawEl = document.getElementById('raw-edit');
+  if (rawEl) newText = rawEl.value;
+
+  DATA.saveAgenda(newText.trim());
+  agenda = newText.trim();
+  alert('Itinerary saved!');
+}
+
+function copyText() {
+  const rawEl = document.getElementById('raw-edit');
+  if (rawEl) {
+    navigator.clipboard.writeText(rawEl.value).then(() => alert('Copied!'));
+    return;
+  }
+  navigator.clipboard.writeText(agenda).then(() => alert('Itinerary copied to clipboard!'));
+}
+
+init();
+</script>
+</body>
+</html>

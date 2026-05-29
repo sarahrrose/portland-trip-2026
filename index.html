@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Portland Trip 2026 🌲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #1a3a2a; --moss: #2d5a3d; --sage: #7a9e82;
+    --fern: #b5c9b8; --cream: #f5f0e8; --warm: #e8dcc8;
+    --rust: #c4622d; --gold: #d4a843; --text: #1a1a18; --muted: #6b6b5e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 32px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 4px 32px rgba(26,58,42,0.12);
+    text-align: center;
+  }
+  .tree { font-size: 64px; margin-bottom: 16px; }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--forest);
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+  .btn-group { display: flex; flex-direction: column; gap: 12px; }
+  .btn {
+    display: block;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+  .btn-jessica { background: var(--forest); color: #fff; }
+  .btn-libby   { background: var(--moss);   color: #fff; }
+  .btn-tracker { background: var(--warm); color: var(--forest); border: 2px solid var(--fern); }
+  .btn-admin   { background: transparent; color: var(--muted); border: 1px solid var(--fern); font-size: 14px; padding: 12px; }
+  .dates {
+    margin-top: 28px;
+    font-size: 13px;
+    color: var(--muted);
+    padding-top: 20px;
+    border-top: 1px solid var(--fern);
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="tree">🌲</div>
+  <h1>Portland Trip 2026</h1>
+  <p class="subtitle">July 31 – August 4 · Welcome to the trip planner! Pick your name to fill out your weekly questions.</p>
+  <div class="btn-group">
+    <a href="jessica.html" class="btn btn-jessica">🌸 I'm Jessica</a>
+    <a href="libby.html"   class="btn btn-libby">⭐ I'm Libby</a>
+    <a href="tracker.html" class="btn btn-tracker">🗺️ See What's In the Running</a>
+    <a href="admin.html"   class="btn btn-admin">🔐 Admin (Sarah only)</a>
+  </div>
+  <div class="dates">Survey opens June 1 · New questions every Monday through August</div>
+</div>
+</body>
+</html>

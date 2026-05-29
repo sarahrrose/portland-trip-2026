@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Portland Trip — Jessica's Survey 🌸</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest:#1a3a2a;--moss:#2d5a3d;--sage:#7a9e82;--fern:#b5c9b8;
+    --cream:#f5f0e8;--warm:#e8dcc8;--rust:#c4622d;--gold:#d4a843;
+    --text:#1a1a18;--muted:#6b6b5e;--radius:16px;
+    --accent: #1a3a2a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;padding-bottom:80px;}
+  .header{background:var(--forest);padding:28px 20px 22px;text-align:center;}
+  .header-emoji{font-size:36px;margin-bottom:8px;}
+  .header h1{font-family:'Playfair Display',serif;font-size:22px;color:#fff;margin-bottom:4px;}
+  .header p{color:var(--fern);font-size:14px;}
+  .week-nav{display:flex;gap:8px;padding:16px 16px 0;overflow-x:auto;scrollbar-width:none;}
+  .week-nav::-webkit-scrollbar{display:none;}
+  .week-pill{flex-shrink:0;padding:8px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:2px solid var(--fern);background:#fff;color:var(--muted);transition:all 0.2s;}
+  .week-pill.active{background:var(--forest);color:#fff;border-color:var(--forest);}
+  .week-pill.complete{background:var(--sage);color:#fff;border-color:var(--sage);}
+  .week-pill.locked{opacity:0.4;cursor:not-allowed;}
+  .content{padding:16px;}
+  .week-intro{background:#fff;border-radius:var(--radius);padding:20px;margin-bottom:16px;border-left:4px solid var(--sage);}
+  .week-intro h2{font-family:'Playfair Display',serif;font-size:18px;color:var(--forest);margin-bottom:6px;}
+  .week-intro p{font-size:14px;color:var(--muted);line-height:1.6;}
+  .question-card{background:#fff;border-radius:var(--radius);padding:20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(26,58,42,0.06);}
+  .q-text{font-size:15px;line-height:1.5;margin-bottom:16px;color:var(--text);}
+  /* Scale */
+  .scale-wrap{display:flex;flex-direction:column;gap:10px;}
+  .scale-track{display:flex;gap:8px;align-items:center;justify-content:center;}
+  .scale-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--fern);background:#fff;font-size:16px;font-weight:600;cursor:pointer;color:var(--muted);transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+  .scale-btn.selected{background:var(--forest);border-color:var(--forest);color:#fff;}
+  .scale-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:0 4px;}
+  /* Yes/No */
+  .yesno-wrap{display:flex;gap:10px;}
+  .yn-btn{flex:1;padding:14px;border-radius:12px;border:2px solid var(--fern);background:#fff;font-size:15px;font-weight:500;cursor:pointer;color:var(--muted);transition:all 0.15s;text-align:center;}
+  .yn-btn.yes.selected{background:#e8f5e9;border-color:#4caf50;color:#2e7d32;}
+  .yn-btn.no.selected{background:#fde8e4;border-color:var(--rust);color:var(--rust);}
+  /* Multiple choice */
+  .mc-option{display:block;width:100%;text-align:left;padding:12px 16px;border-radius:10px;border:2px solid var(--fern);background:#fff;font-size:14px;font-weight:400;cursor:pointer;color:var(--text);margin-bottom:8px;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+  .mc-option.selected{background:var(--forest);border-color:var(--forest);color:#fff;}
+  /* Multiselect */
+  .ms-option{display:block;width:100%;text-align:left;padding:12px 16px;border-radius:10px;border:2px solid var(--fern);background:#fff;font-size:14px;cursor:pointer;color:var(--text);margin-bottom:8px;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+  .ms-option.selected{background:var(--moss);border-color:var(--moss);color:#fff;}
+  /* Text */
+  .text-input{width:100%;padding:12px 16px;border-radius:10px;border:2px solid var(--fern);font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;resize:vertical;min-height:80px;outline:none;transition:border-color 0.15s;}
+  .text-input:focus{border-color:var(--sage);}
+  /* Save btn */
+  .save-bar{position:fixed;bottom:0;left:0;right:0;padding:16px;background:var(--cream);border-top:1px solid var(--fern);}
+  .save-btn{width:100%;padding:16px;border-radius:14px;background:var(--forest);color:#fff;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;border:none;cursor:pointer;transition:background 0.2s;}
+  .save-btn:hover{background:var(--moss);}
+  .save-btn:disabled{background:var(--fern);cursor:not-allowed;}
+  .save-confirm{text-align:center;color:var(--sage);font-size:14px;font-weight:500;margin-top:8px;height:20px;}
+  .locked-msg{text-align:center;padding:40px 20px;color:var(--muted);}
+  .locked-msg .lock-icon{font-size:48px;margin-bottom:12px;}
+  .home-link{display:block;text-align:center;margin:16px;color:var(--muted);font-size:13px;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-emoji">🌸</div>
+  <h1>Jessica's Survey</h1>
+  <p>Portland Trip · July 31 – August 4, 2026</p>
+</div>
+
+<div class="week-nav" id="week-nav"></div>
+
+<div class="content" id="content"></div>
+
+<div class="save-bar">
+  <button class="save-btn" id="save-btn" onclick="saveWeek()">Save My Answers</button>
+  <div class="save-confirm" id="save-confirm"></div>
+</div>
+
+<a href="index.html" class="home-link">← Back to home</a>
+
+<script src="questions.js"></script>
+<script src="data.js"></script>
+<script>
+const USER = 'jessica';
+let currentWeek = 1;
+
+function init() {
+  renderNav();
+  // Find first unlocked week
+  const firstUnlocked = QUESTIONS.find(w => DATA.isWeekUnlocked(w.week));
+  if (firstUnlocked) currentWeek = firstUnlocked.week;
+  renderWeek(currentWeek);
+}
+
+function renderNav() {
+  const nav = document.getElementById('week-nav');
+  nav.innerHTML = QUESTIONS.map(w => {
+    const complete = DATA.isWeekComplete(USER, w.week);
+    const unlocked = DATA.isWeekUnlocked(w.week);
+    const classes = ['week-pill', complete ? 'complete' : '', !unlocked ? 'locked' : '', w.week === currentWeek ? 'active' : ''].filter(Boolean).join(' ');
+    return `<button class="${classes}" onclick="selectWeek(${w.week})" ${!unlocked ? 'disabled' : ''}>${complete ? '✓' : ''} Week ${w.week}</button>`;
+  }).join('');
+}
+
+function selectWeek(week) {
+  if (!DATA.isWeekUnlocked(week)) return;
+  currentWeek = week;
+  renderNav();
+  renderWeek(week);
+  window.scrollTo(0, 0);
+}
+
+function renderWeek(weekNum) {
+  const wData = QUESTIONS.find(w => w.week === weekNum);
+  const content = document.getElementById('content');
+
+  if (!DATA.isWeekUnlocked(weekNum)) {
+    const sendDate = new Date(wData.sendDate);
+    content.innerHTML = `<div class="locked-msg"><div class="lock-icon">🔒</div><p>Week ${weekNum} opens ${sendDate.toLocaleDateString('en-US', {month:'long',day:'numeric'})}.<br>Check back then!</p></div>`;
+    document.getElementById('save-btn').disabled = true;
+    return;
+  }
+
+  document.getElementById('save-btn').disabled = false;
+
+  const answers = DATA.getAnswers(USER);
+  let html = `<div class="week-intro"><h2>Week ${weekNum}: ${wData.theme}</h2><p>${wData.intro}</p></div>`;
+
+  wData.questions.forEach(q => {
+    html += `<div class="question-card" id="card-${q.id}"><div class="q-text">${q.text}</div>`;
+
+    if (q.type === 'scale') {
+      const val = answers[q.id];
+      html += `<div class="scale-wrap"><div class="scale-track">`;
+      for (let i = q.scale.min; i <= q.scale.max; i++) {
+        html += `<button class="scale-btn ${val == i ? 'selected' : ''}" onclick="pick('${q.id}', ${i}, this, 'scale')">${i}</button>`;
+      }
+      html += `</div><div class="scale-labels"><span>${q.scale.labels[0]}</span><span>${q.scale.labels[1]}</span></div></div>`;
+
+    } else if (q.type === 'yesno' || q.type === 'yesno_place') {
+      const val = answers[q.id];
+      html += `<div class="yesno-wrap">
+        <button class="yn-btn yes ${val==='yes'?'selected':''}" onclick="pick('${q.id}','yes',this,'yn-yes')">👍 Yes</button>
+        <button class="yn-btn no ${val==='no'?'selected':''}" onclick="pick('${q.id}','no',this,'yn-no')">👎 No</button>
+      </div>`;
+
+    } else if (q.type === 'multiplechoice') {
+      const val = answers[q.id];
+      html += q.options.map(opt =>
+        `<button class="mc-option ${val===opt?'selected':''}" onclick="pick('${q.id}','${opt.replace(/'/g,"\\'")}',this,'mc')">${opt}</button>`
+      ).join('');
+
+    } else if (q.type === 'multiselect') {
+      const val = answers[q.id] || [];
+      html += q.options.map(opt =>
+        `<button class="ms-option ${val.includes(opt)?'selected':''}" onclick="toggleMulti('${q.id}','${opt.replace(/'/g,"\\'")}',this)">${opt}</button>`
+      ).join('');
+
+    } else if (q.type === 'text') {
+      const val = answers[q.id] || '';
+      html += `<textarea class="text-input" id="text-${q.id}" placeholder="Optional..." onchange="DATA.saveAnswer('${USER}','${q.id}',this.value)">${val}</textarea>`;
+    }
+
+    html += `</div>`;
+  });
+
+  content.innerHTML = html;
+}
+
+function pick(id, val, btn, type) {
+  DATA.saveAnswer(USER, id, val);
+
+  if (type === 'scale') {
+    btn.closest('.scale-track').querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  } else if (type === 'yn-yes' || type === 'yn-no') {
+    const wrap = btn.closest('.yesno-wrap');
+    wrap.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  } else if (type === 'mc') {
+    btn.closest('.question-card').querySelectorAll('.mc-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+}
+
+function toggleMulti(id, val, btn) {
+  const current = DATA.getAnswer(USER, id) || [];
+  const idx = current.indexOf(val);
+  if (idx === -1) current.push(val);
+  else current.splice(idx, 1);
+  DATA.saveAnswer(USER, id, current);
+  btn.classList.toggle('selected');
+}
+
+function saveWeek() {
+  // Save any text inputs
+  const wData = QUESTIONS.find(w => w.week === currentWeek);
+  wData.questions.filter(q => q.type === 'text').forEach(q => {
+    const el = document.getElementById(`text-${q.id}`);
+    if (el) DATA.saveAnswer(USER, q.id, el.value);
+  });
+
+  renderNav();
+  const confirm = document.getElementById('save-confirm');
+  confirm.textContent = '✓ Answers saved!';
+  setTimeout(() => confirm.textContent = '', 3000);
+}
+
+init();
+</script>
+</body>
+</html>
