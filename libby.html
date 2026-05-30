@@ -78,13 +78,13 @@
     function renderNav() {
       const nav = document.getElementById('week-nav');
       nav.innerHTML = QUESTIONS.map(w => {
-        const unlocked  = DATA.isWeekUnlocked(w.week);
+        const unlocked = DATA.isWeekUnlocked(w.week);
         const completed = DATA.isWeekComplete(USER, w.week);
-        const isActive  = w.week === currentWeek;
-        const classes   = ['week-pill',
-          !unlocked  ? 'locked'   : '',
-          completed  ? 'done'     : unlocked ? 'unlocked' : '',
-          isActive   ? 'active'   : ''
+        const isActive = w.week === currentWeek;
+        const classes = ['week-pill',
+          !unlocked ? 'locked' : '',
+          completed ? 'done' : unlocked ? 'unlocked' : '',
+          isActive ? 'active' : ''
         ].filter(Boolean).join(' ');
         const label = w.week === 0 ? 'Intro' : 'Week ' + w.week;
         return '<button class="' + classes + '" onclick="selectWeek(' + w.week + ')"' + (!unlocked ? ' disabled' : '') + '>' + label + '</button>';
@@ -103,7 +103,7 @@
       if (!wData) return;
       const content = document.getElementById('week-content');
       if (!DATA.isWeekUnlocked(week)) {
-        const sendDate  = new Date(wData.sendDate);
+        const sendDate = new Date(wData.sendDate);
         const formatted = sendDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
         content.innerHTML = '<div class="locked-msg">&#x1F512; Week ' + week + ' opens ' + formatted + '. Check back then!</div>';
         return;
@@ -123,10 +123,10 @@
           inputHTML = '<div class="yesno-btns"><button class="yn-btn yes' + (saved === 'yes' ? ' selected' : '') + '" onclick="pick(this,\'' + q.id + '\',\'yes\')">✓ Yes</button><button class="yn-btn no' + (saved === 'no' ? ' selected' : '') + '" onclick="pick(this,\'' + q.id + '\',\'no\')">✗ No</button></div>';
         } else if (q.type === 'multiselect') {
           const savedArr = Array.isArray(saved) ? saved : [];
-          inputHTML = '<div class="multi-options">' + q.options.map(opt => '<button class="multi-opt' + (savedArr.includes(opt) ? ' selected' : '') + '" onclick="toggleMulti(this,'' + q.id + '','' + opt.replace(/'/g, "\\'" ) + '')">'+opt+'</button>').join('') + '</div>';
+          inputHTML = '<div class="multi-options">' + q.options.map(opt => '<button class="multi-opt' + (savedArr.includes(opt) ? ' selected' : '') + '" onclick="toggleMulti(this,\'' + q.id + '\',\'' + opt.replace(/'/g, "\\'") + '\')">' + opt + '</button>').join('') + '</div>';
         } else if (q.type === 'multiplechoice') {
           const savedArr = Array.isArray(saved) ? saved : (saved ? [saved] : []);
-          inputHTML = '<div class="multi-options">' + q.options.map(opt => '<button class="multi-opt' + (savedArr.includes(opt) ? ' selected' : '') + '" onclick="pickOne(this,'' + q.id + '','' + opt.replace(/'/g, "\\'" ) + '')">'+opt+'</button>').join('') + '</div>';
+          inputHTML = '<div class="multi-options">' + q.options.map(opt => '<button class="multi-opt' + (savedArr.includes(opt) ? ' selected' : '') + '" onclick="pickOne(this,\'' + q.id + '\',\'' + opt.replace(/'/g, "\\'") + '\')">' + opt + '</button>').join('') + '</div>';
         } else if (q.type === 'text') {
           inputHTML = '<textarea class="text-input" id="text-' + q.id + '" placeholder="Type here…">' + (saved || '') + '</textarea>';
         }
