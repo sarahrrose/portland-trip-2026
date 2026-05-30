@@ -70,7 +70,7 @@
 
     function init() {
       renderNav();
-      const firstUnlocked = QUESTIONS.find(w => DATA.isWeekUnlocked(w.week));
+      const firstUnlocked = QUESTIONS.find(w => DATA.isWeekUnlocked(w.week, USER));
       if (firstUnlocked) currentWeek = firstUnlocked.week;
       renderWeek(currentWeek);
     }
@@ -78,7 +78,7 @@
     function renderNav() {
       const nav = document.getElementById('week-nav');
       nav.innerHTML = QUESTIONS.map(w => {
-        const unlocked = DATA.isWeekUnlocked(w.week);
+        const unlocked = DATA.isWeekUnlocked(w.week, USER);
         const completed = DATA.isWeekComplete(USER, w.week);
         const isActive = w.week === currentWeek;
         const classes = ['week-pill',
@@ -92,7 +92,7 @@
     }
 
     function selectWeek(week) {
-      if (!DATA.isWeekUnlocked(week)) return;
+      if (!DATA.isWeekUnlocked(week, USER)) return;
       currentWeek = week;
       renderNav();
       renderWeek(week);
@@ -102,7 +102,7 @@
       const wData = QUESTIONS.find(w => w.week === week);
       if (!wData) return;
       const content = document.getElementById('week-content');
-      if (!DATA.isWeekUnlocked(week)) {
+      if (!DATA.isWeekUnlocked(week, USER)) {
         const sendDate = new Date(wData.sendDate);
         const formatted = sendDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
         content.innerHTML = '<div class="locked-msg">&#x1F512; Week ' + week + ' opens ' + formatted + '. Check back then!</div>';
