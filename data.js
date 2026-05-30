@@ -34,18 +34,18 @@ const DATA = (() => {
     return QUESTIONS.filter(w => isWeekComplete(user, w.week)).map(w => w.week);
   }
 
-  // Month-based unlock: on the 1st of a month, ALL weeks in that month unlock.
-  function isWeekUnlocked(week) {
-    const wData = QUESTIONS.find(w => w.week === week);
-    if (!wData) return false;
-    const sendDate = new Date(wData.sendDate);
-    const now = new Date();
-    const unlockOn = new Date(sendDate.getFullYear(), sendDate.getMonth(), 1);
-    return now >= unlockOn;
-  }
+  // Progression-based unlock: Week 0 always open.
+// Each subsequent week unlocks only after the previous week is completed.
+function isWeekUnlocked(week, user) {
+if (week === 0) return true;
+const sorted = QUESTIONS.map(w => w.week).sort((a, b) => a - b);
+const idx = sorted.indexOf(week);
+if (idx <= 0) return true;
+const prevWeek = sorted[idx - 1];
+return isWeekComplete(user || '', prevWeek);
+}
 
-  // Only return places where BOTH people said yes.
-  function getInRunningPlaces() {
+function getInRunningPlaces() {
     const allPlaces = {};
     ['jessica', 'libby'].forEach(user => {
       const answers = getAnswers(user);
