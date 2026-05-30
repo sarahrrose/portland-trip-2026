@@ -116,11 +116,11 @@
         if (q.type === 'scale') {
           const btns = [];
           for (let v = q.scale.min; v <= q.scale.max; v++) {
-            btns.push('<button class="scale-btn' + (saved == v ? ' selected' : '') + '" onclick="pick(this,'' + q.id + '','' + v + '')">' + v + '</button>');
+            btns.push('<button class="scale-btn' + (saved == v ? ' selected' : '') + '" onclick="pick(this,\'' + q.id + '\',' + v + ')">' + v + '</button>');
           }
           inputHTML = '<div class="scale-btns">' + btns.join('') + '</div><div class="scale-labels"><span>' + q.scale.labels[0] + '</span><span>' + q.scale.labels[1] + '</span></div>';
         } else if (q.type === 'yesno' || q.type === 'yesno_place') {
-          inputHTML = '<div class="yesno-btns"><button class="yn-btn yes' + (saved === 'yes' ? ' selected' : '') + '" onclick="pick(this,'' + q.id + '','yes')">✓ Yes</button><button class="yn-btn no' + (saved === 'no' ? ' selected' : '') + '" onclick="pick(this,'' + q.id + '','no')">✗ No</button></div>';
+          inputHTML = '<div class="yesno-btns"><button class="yn-btn yes' + (saved === 'yes' ? ' selected' : '') + '" onclick="pick(this,\'' + q.id + '\',\'yes\')">✓ Yes</button><button class="yn-btn no' + (saved === 'no' ? ' selected' : '') + '" onclick="pick(this,\'' + q.id + '\',\'no\')">✗ No</button></div>';
         } else if (q.type === 'multiselect') {
           const savedArr = Array.isArray(saved) ? saved : [];
           inputHTML = '<div class="multi-options">' + q.options.map(opt => '<button class="multi-opt' + (savedArr.includes(opt) ? ' selected' : '') + '" onclick="toggleMulti(this,'' + q.id + '','' + opt.replace(/'/g, "\\'" ) + '')">'+opt+'</button>').join('') + '</div>';
@@ -132,7 +132,7 @@
         }
         const imageHTML = (q.type === 'yesno_place' && q.image) ? '<div class="place-image-wrap"><a href="' + (q.imageLink || '#') + '" target="_blank" rel="noopener"><img src="' + q.image + '" alt="' + q.place + '" loading="lazy"></a></div>' : '';
         const noPrefSaved = saved === 'no_pref';
-        const noPrefHTML = (q.type !== 'text') ? '<div class="no-pref-wrap"><button class="no-pref-btn' + (noPrefSaved ? ' selected' : '') + '" onclick="pickNoPref(this,'' + q.id + ')">No preference / unsure</button></div>' : '';
+        const noPrefHTML = (q.type !== 'text') ? '<div class="no-pref-wrap"><button class="no-pref-btn' + (noPrefSaved ? ' selected' : '') + '" onclick="pickNoPref(this,\'' + q.id + '\')">No preference / unsure</button></div>' : '';
         const commentHTML = (q.type !== 'text') ? '<div class="comment-wrap"><p class="comment-label">Any notes or context?</p><textarea class="comment-field" id="comment-' + q.id + '" placeholder="Optional…">' + savedComment + '</textarea></div>' : '';
         return '<div class="question-card" id="card-' + q.id + '">' + imageHTML + '<p class="question-text">' + q.text + '</p>' + inputHTML + noPrefHTML + commentHTML + '</div>';
       }).join('');
