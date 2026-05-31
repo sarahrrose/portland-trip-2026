@@ -46,28 +46,28 @@ return isWeekComplete(user || '', prevWeek);
 }
 
 function getInRunningPlaces() {
-    const allPlaces = {};
+    const results = {};
     ['jessica', 'libby'].forEach(user => {
       const answers = getAnswers(user);
       QUESTIONS.forEach(week => {
         week.questions.forEach(q => {
-          if (q.type === 'yesno_place' && q.place) {
-            const val = answers[q.id];
-            if (!allPlaces[q.place]) allPlaces[q.place] = { yes: 0, no: 0, unanswered: 0 };
-            if (val === 'yes')     allPlaces[q.place].yes++;
-            else if (val === 'no') allPlaces[q.place].no++;
-            else                   allPlaces[q.place].unanswered++;
+          if (q.image && q.place) {
+            const val = parseInt(answers[q.id], 10);
+            if (!isNaN(val) && val >= 4) {
+              if (!results[q.id]) results[q.id] = { place: q.place, image: q.image, imageLink: q.imageLink || q.image, scores: [] };
+              results[q.id].scores.push(val);
+            }
           }
         });
       });
     });
-    return Object.entries(allPlaces)
-      .filter(([, v]) => v.yes === 2)
-      .sort((a, b) => b[1].yes - a[1].yes)
-      .map(([place, votes]) => ({ place, ...votes }));
-  }
-
-  function getPin()        { return localStorage.getItem(KEYS.pin); }
+    return Object.values(results)
+      .sort((a, b) => {
+        const avgA = a.scores.reduce((s, v) => s + v, 0) / a.scores.length;
+        const avgB = b.scores.reduce((s, v) => s + v, 0) / b.scores.length;
+        return avgB - avgA;
+      });
+  }function getPin()        { return localStorage.getItem(KEYS.pin); }
   function setPin(pin)     { localStorage.setItem(KEYS.pin, pin); }
   function checkPin(input) { return input === localStorage.getItem(KEYS.pin); }
 
