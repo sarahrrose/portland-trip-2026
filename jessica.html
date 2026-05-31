@@ -59,6 +59,12 @@
     .top-nav a:hover { background: rgba(255,255,255,0.15); color: white; }
     .top-nav .nav-brand { color: white; font-size: 0.85rem; font-family: 'Georgia', serif; letter-spacing: 0.05em; opacity: 0.7; flex: 1; }
   </style>
+  <script>
+    (function() {
+      var u = localStorage.getItem('ptUser');
+      if (u && u !== 'jessica') { window.location.replace('index.html'); }
+    })();
+  </script>
 </head>
 <body>
   <nav class="top-nav">
