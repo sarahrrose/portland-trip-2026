@@ -211,6 +211,7 @@ inputHTML = imageHTML + '<div class="scale-btns">' + btns.join('') + '</div><div
       msg.textContent = '✓ Answers saved!';
       setTimeout(() => { msg.textContent = ''; }, 3000);
       renderNav();
+      document.getElementById('week-nav').scrollIntoView({ behavior: 'smooth' });
     }
     init();
   </script>
