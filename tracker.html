@@ -112,7 +112,7 @@
     function init() {
       ['jessica', 'libby'].forEach(user => {
         const done  = DATA.completedWeeks(user).length;
-        const total = QUESTIONS.filter(w => DATA.isWeekUnlocked(w.week)).length;
+        const total = QUESTIONS.length;
         const el    = document.getElementById('progress-' + user);
         el.querySelector('.progress-count').textContent =
           Math.round(done / (total || 1) * 100) + '%';
