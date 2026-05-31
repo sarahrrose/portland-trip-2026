@@ -84,141 +84,135 @@
   <script src="questions.js"></script>
   <script>
     const USER = 'jessica';
-    let currentWeek = 0;
+    let currentSection = 0;
+
+    const SECTIONS = [
+      { section: 0, label: 'Intro',     weeks: [0] },
+      { section: 1, label: 'Section 1', weeks: [1, 2, 3] },
+      { section: 2, label: 'Section 2', weeks: [4, 5, 6] },
+      { section: 3, label: 'Section 3', weeks: [7, 8, 9] },
+      { section: 4, label: 'Section 4', weeks: [10, 11] },
+    ];
+
+    function isSectionComplete(sectionNum) {
+      const sec = SECTIONS.find(s => s.section === sectionNum);
+      if (!sec) return false;
+      return sec.weeks.every(w => DATA.isWeekComplete(USER, w));
+    }
+
+    function isSectionUnlocked(sectionNum) {
+      if (sectionNum === 0) return true;
+      return isSectionComplete(sectionNum - 1);
+    }
 
     function init() {
       renderNav();
-      const firstUnlocked = QUESTIONS.find(w => DATA.isWeekUnlocked(w.week, USER));
-      if (firstUnlocked) currentWeek = firstUnlocked.week;
-      renderWeek(currentWeek);
+      let startSection = 0;
+      for (let i = 0; i < SECTIONS.length; i++) {
+        if (isSectionUnlocked(i)) startSection = i;
+        if (isSectionUnlocked(i) && !isSectionComplete(i)) { startSection = i; break; }
+      }
+      currentSection = startSection;
+      renderSection(currentSection);
     }
 
     function renderNav() {
       const nav = document.getElementById('week-nav');
-      nav.innerHTML = QUESTIONS.map(w => {
-        const unlocked = DATA.isWeekUnlocked(w.week, USER);
-        const completed = DATA.isWeekComplete(USER, w.week);
-        const isActive = w.week === currentWeek;
-        const classes = ['week-pill',
-          !unlocked ? 'locked' : '',
-          completed ? 'done' : unlocked ? 'unlocked' : '',
-          isActive ? 'active' : ''
-        ].filter(Boolean).join(' ');
-        const label = w.week === 0 ? 'Intro' : 'Week ' + w.week;
-        return '<button class="' + classes + '" onclick="selectWeek(' + w.week + ')"' + (!unlocked ? ' disabled' : '') + '>' + label + '</button>';
+      nav.innerHTML = SECTIONS.map(s => {
+        const unlocked  = isSectionUnlocked(s.section);
+        const completed = isSectionComplete(s.section);
+        const isActive  = s.section === currentSection;
+        let cls = 'week-pill';
+        if (!unlocked)  cls += ' locked';
+        else if (isActive) cls += ' active';
+        else if (completed) cls += ' done';
+        else cls += ' unlocked';
+        const click = unlocked ? 'onclick="showSection(' + s.section + ')"' : '';
+        return '<button class="' + cls + '" ' + click + '>' + s.label + '</button>';
       }).join('');
     }
 
-    function selectWeek(week) {
-      if (!DATA.isWeekUnlocked(week, USER)) return;
-      currentWeek = week;
+    function showSection(sectionNum) {
+      if (!isSectionUnlocked(sectionNum)) return;
+      currentSection = sectionNum;
       renderNav();
-      renderWeek(week);
+      renderSection(sectionNum);
     }
 
-    function renderWeek(week) {
-      const wData = QUESTIONS.find(w => w.week === week);
+    function renderSection(sectionNum) {
+      const sec = SECTIONS.find(s => s.section === sectionNum);
+      if (!sec) return;
+      const contentEl = document.getElementById('week-content');
+      contentEl.innerHTML = '';
+      sec.weeks.forEach(weekNum => renderWeekInto(contentEl, weekNum));
+    }
+
+    function renderWeekInto(container, weekNum) {
+      const wData = QUESTIONS.find(w => w.week === weekNum);
       if (!wData) return;
-      const content = document.getElementById('week-content');
-      if (!DATA.isWeekUnlocked(week, USER)) {
-        const sendDate = new Date(wData.sendDate);
-        const formatted = sendDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-        content.innerHTML = '<div class="locked-msg">&#x1F512; Week ' + week + ' opens ' + formatted + '. Check back then!</div>';
-        return;
-      }
       const answers = DATA.getAnswers(USER);
-      const questionsHTML = wData.questions.map(q => {
-        const saved = answers[q.id];
-        const savedComment = answers[q.id + '_comment'] || '';
+      const div = document.createElement('div');
+      div.className = 'week-section active';
+
+      let html = '<div class="week-header"><h2>' + (wData.title || 'Week ' + weekNum) + '</h2>';
+      if (wData.intro) html += '<p class="intro">' + wData.intro + '</p>';
+      html += '</div>';
+
+      wData.questions.forEach(q => {
+        const val = answers[q.id] || '';
         let inputHTML = '';
-        if (q.type === 'scale') {
-const imageHTML = q.image ? '<div class="place-image-wrap"><a href="' + (q.imageLink || q.image) + '" target="_blank" rel="noopener"><img src="' + q.image + '" alt="' + (q.place || '') + '" loading="lazy"></a></div>' : '';
-const btns = [];
-for (let v = q.scale.min; v <= q.scale.max; v++) {
-btns.push('<button class="scale-btn' + (saved == v ? ' selected' : '') + '" onclick="pick(this,\'' + q.id + '\',' + v + ')">' + v + '</button>');
-}
-inputHTML = imageHTML + '<div class="scale-btns">' + btns.join('') + '</div><div class="scale-labels"><span>' + q.scale.labels[0] + '</span><span>' + q.scale.labels[1] + '</span></div>';
-} else if (q.type === 'yesno' || q.type === 'yesno_place') {
-          inputHTML = '<div class="yesno-btns"><button class="yn-btn yes' + (saved === 'yes' ? ' selected' : '') + '" onclick="pick(this,\'' + q.id + '\',\'yes\')">✓ Yes</button><button class="yn-btn no' + (saved === 'no' ? ' selected' : '') + '" onclick="pick(this,\'' + q.id + '\',\'no\')">✗ No</button></div>';
-        } else if (q.type === 'multiselect') {
-          const savedArr = Array.isArray(saved) ? saved : [];
-          inputHTML = '<div class="multi-options">' + q.options.map(opt => '<button class="multi-opt' + (savedArr.includes(opt) ? ' selected' : '') + '" onclick="toggleMulti(this,\'' + q.id + '\',\'' + opt.replace(/'/g, "\\'") + '\')">' + opt + '</button>').join('') + '</div>';
-        } else if (q.type === 'multiplechoice') {
-          const savedArr = Array.isArray(saved) ? saved : (saved ? [saved] : []);
-          inputHTML = '<div class="multi-options">' + q.options.map(opt => '<button class="multi-opt' + (savedArr.includes(opt) ? ' selected' : '') + '" onclick="pickOne(this,\'' + q.id + '\',\'' + opt.replace(/'/g, "\\'") + '\')">' + opt + '</button>').join('') + '</div>';
-        } else if (q.type === 'text') {
-          inputHTML = '<textarea class="text-input" id="text-' + q.id + '" placeholder="Type here…">' + (saved || '') + '</textarea>';
+        if (q.type === 'text') {
+          inputHTML = '<textarea id="q_' + q.id + '" placeholder="Type here...">' + (val || '') + '</textarea>';
+        } else if (q.type === 'scale') {
+          const imgH = q.image ? '<div class="place-image-wrap"><a href="' + (q.imageLink || q.image) + '" target="_blank" rel="noopener"><img src="' + q.image + '" alt="' + (q.place || '') + '" loading="lazy"></a></div>' : '';
+          inputHTML = imgH + '<div class="scale-btns">' +
+            [1,2,3,4,5].map(n => '<button class="scale-btn' + (val == n ? ' selected' : '') + '" data-q="' + q.id + '" data-v="' + n + '" onclick="pickScale(this)">' + n + '</button>').join('') +
+            '</div>' +
+            '<div class="scale-labels"><span>' + (q.labels ? q.labels[0] : '') + '</span><span>' + (q.labels ? q.labels[1] : '') + '</span></div>' +
+            '<button class="no-pref-btn' + (val === 'no_pref' ? ' selected' : '') + '" data-q="' + q.id + '" onclick="pickNoPref(this)">No preference / unsure</button>';
+          if (q.note) inputHTML += '<p class="q-note">' + q.note + '</p>';
         }
-        const imageHTML = (q.type === 'yesno_place' && q.image) ? '<div class="place-image-wrap"><a href="' + (q.imageLink || '#') + '" target="_blank" rel="noopener"><img src="' + q.image + '" alt="' + q.place + '" loading="lazy"></a></div>' : '';
-        const noPrefSaved = saved === 'no_pref';
-        const noPrefHTML = (q.type !== 'text') ? '<div class="no-pref-wrap"><button class="no-pref-btn' + (noPrefSaved ? ' selected' : '') + '" onclick="pickNoPref(this,\'' + q.id + '\')">No preference / unsure</button></div>' : '';
-        const commentHTML = (q.type !== 'text') ? '<div class="comment-wrap"><p class="comment-label">Any notes or context?</p><textarea class="comment-field" id="comment-' + q.id + '" placeholder="Optional…">' + savedComment + '</textarea></div>' : '';
-        return '<div class="question-card" id="card-' + q.id + '">' + imageHTML + '<p class="question-text">' + q.text + '</p>' + inputHTML + noPrefHTML + commentHTML + '</div>';
-      }).join('');
-      content.innerHTML = '<div class="week-header"><h2>' + wData.theme + '</h2><p class="intro">' + wData.intro + '</p></div>' + questionsHTML + '<button class="save-btn" onclick="saveWeek()">Save My Answers</button><p class="save-msg" id="save-msg"></p>';
+        html += '<div class="question-card"><p class="question-text">' + q.text + '</p>' + inputHTML + '</div>';
+      });
+
+      html += '<button class="save-btn" onclick="saveWeek(' + weekNum + ')">Save Week ' + (weekNum === 0 ? 'Intro' : weekNum) + '</button>';
+      div.innerHTML = html;
+      container.appendChild(div);
     }
 
-    function pick(btn, qId, value) {
-      const card = btn.closest('.question-card');
-      const noPrefBtn = card.querySelector('.no-pref-btn');
-      if (noPrefBtn) noPrefBtn.classList.remove('selected');
-      card.querySelectorAll('.scale-btn, .yn-btn').forEach(b => b.classList.remove('selected'));
+    function pickScale(btn) {
+      const qId = btn.dataset.q;
+      document.querySelectorAll('.scale-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.no-pref-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     }
-    function toggleMulti(btn, qId, value) {
-      const card = btn.closest('.question-card');
-      const noPrefBtn = card.querySelector('.no-pref-btn');
-      if (noPrefBtn) noPrefBtn.classList.remove('selected');
-      btn.classList.toggle('selected');
-    }
-    function pickOne(btn, qId, value) {
-      const card = btn.closest('.question-card');
-      const noPrefBtn = card.querySelector('.no-pref-btn');
-      if (noPrefBtn) noPrefBtn.classList.remove('selected');
-      card.querySelectorAll('.multi-opt').forEach(b => b.classList.remove('selected'));
+
+    function pickNoPref(btn) {
+      const qId = btn.dataset.q;
+      document.querySelectorAll('.scale-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     }
-    function pickNoPref(btn, qId) {
-      const card = btn.closest('.question-card');
-      card.querySelectorAll('.scale-btn, .yn-btn, .multi-opt').forEach(b => b.classList.remove('selected'));
-      btn.classList.toggle('selected');
-    }
-    function saveWeek() {
-      const wData = QUESTIONS.find(w => w.week === currentWeek);
+
+    function saveWeek(weekNum) {
+      const wData = QUESTIONS.find(w => w.week === weekNum);
       if (!wData) return;
       wData.questions.forEach(q => {
-        const card = document.getElementById('card-' + q.id);
-        if (!card) return;
-        const noPrefBtn = card.querySelector('.no-pref-btn');
-        if (noPrefBtn && noPrefBtn.classList.contains('selected')) {
-          DATA.saveAnswer(USER, q.id, 'no_pref');
-        } else if (q.type === 'scale') {
-          const sel = card.querySelector('.scale-btn.selected');
-          if (sel) DATA.saveAnswer(USER, q.id, sel.textContent.trim());
-        } else if (q.type === 'yesno' || q.type === 'yesno_place') {
-          const sel = card.querySelector('.yn-btn.selected');
-          if (sel) DATA.saveAnswer(USER, q.id, sel.classList.contains('yes') ? 'yes' : 'no');
-        } else if (q.type === 'multiselect') {
-          const sels = Array.from(card.querySelectorAll('.multi-opt.selected')).map(b => b.textContent.trim());
-          if (sels.length) DATA.saveAnswer(USER, q.id, sels);
-        } else if (q.type === 'multiplechoice') {
-          const sel = card.querySelector('.multi-opt.selected');
-          if (sel) DATA.saveAnswer(USER, q.id, sel.textContent.trim());
-        } else if (q.type === 'text') {
-          const el = document.getElementById('text-' + q.id);
+        if (q.type === 'text') {
+          const el = document.getElementById('q_' + q.id);
           if (el) DATA.saveAnswer(USER, q.id, el.value);
-        }
-        if (q.type !== 'text') {
-          const commentEl = document.getElementById('comment-' + q.id);
-          if (commentEl && commentEl.value.trim()) DATA.saveAnswer(USER, q.id + '_comment', commentEl.value.trim());
+        } else if (q.type === 'scale') {
+          const sel = document.querySelector('.scale-btn.selected[data-q="' + q.id + '"]');
+          const noPref = document.querySelector('.no-pref-btn.selected[data-q="' + q.id + '"]');
+          if (sel) DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
+          else if (noPref) DATA.saveAnswer(USER, q.id, 'no_pref');
         }
       });
-      const msg = document.getElementById('save-msg');
-      msg.textContent = '✓ Answers saved!';
-      setTimeout(() => { msg.textContent = ''; }, 3000);
+      DATA.saveAnswer(USER, 'week_' + weekNum + '_complete', true);
       renderNav();
+      renderSection(currentSection);
       document.getElementById('week-nav').scrollIntoView({ behavior: 'smooth' });
     }
+
     init();
   </script>
 </body>
