@@ -82,7 +82,7 @@
 <body>
   <div class="container">
     <h1>What's In the Running 🗺️</h1>
-    <p class="intro">Places and activities rated 4 or 5 by either of you — sorted by enthusiasm. No individual attribution; Sarah sees the full picture when planning.</p>
+    <p class="intro">Places and activities ranking highest from your survey responses. Once all surveys are complete, you'll have the opportunity to vote on your favorites.</p>
 
     <div class="section">
       <h2>Survey Progress</h2>
@@ -115,7 +115,7 @@
         const total = QUESTIONS.filter(w => DATA.isWeekUnlocked(w.week)).length;
         const el    = document.getElementById('progress-' + user);
         el.querySelector('.progress-count').textContent =
-          done + ' of ' + total + ' week' + (total === 1 ? '' : 's') + ' complete';
+          Math.round(done / (total || 1) * 100) + '%';
       });
       const places = DATA.getInRunningPlaces();
       const list   = document.getElementById('places-list');
