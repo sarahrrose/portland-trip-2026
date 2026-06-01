@@ -134,7 +134,7 @@
         }).join('');
       }
     }
-    init();
+    DATA.loadFromGist().then(() => init()).catch(() => init());
   </script>
 </body>
 </html>
