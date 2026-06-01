@@ -211,25 +211,29 @@
       return wData.questions.length;
     }
     function saveWeek(weekNum) {
-      const wData = QUESTIONS.find(w => w.week === weekNum);
-      if (!wData) return;
-      wData.questions.forEach(q => {
-        if (q.type === 'scale') {
-          const sel = document.querySelector('.scale-btn.selected[data-q="' + q.id + '"]');
-          const noPref = document.querySelector('.no-pref-btn.selected[data-q="' + q.id + '"]');
-          if (sel) {
-            DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
-            DATA.saveAnswer(USER, q.id + '_nopref', '');
-          } else if (noPref) {
-            DATA.saveAnswer(USER, q.id, '');
-            DATA.saveAnswer(USER, q.id + '_nopref', 'yes');
+      const sec = SECTIONS.find(s => s.section === currentSection);
+      const weeksToSave = sec ? sec.weeks : [weekNum];
+      weeksToSave.forEach(function(wNum) {
+        const wData = QUESTIONS.find(w => w.week === wNum);
+        if (!wData) return;
+        wData.questions.forEach(function(q) {
+          if (q.type === 'scale') {
+            const sel = document.querySelector('.scale-btn.selected[data-q="' + q.id + '"]');
+            const noPref = document.querySelector('.no-pref-btn.selected[data-q="' + q.id + '"]');
+            if (sel) {
+              DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
+              DATA.saveAnswer(USER, q.id + '_nopref', '');
+            } else if (noPref) {
+              DATA.saveAnswer(USER, q.id, '');
+              DATA.saveAnswer(USER, q.id + '_nopref', 'yes');
+            }
+            const commentEl = document.getElementById('comment_' + q.id);
+            if (commentEl) DATA.saveAnswer(USER, q.id + '_comment', commentEl.value);
+          } else if (q.type === 'text') {
+            const el = document.querySelector('textarea[name="' + q.id + '"]');
+            if (el) DATA.saveAnswer(USER, q.id, el.value);
           }
-          const commentEl = document.getElementById('comment_' + q.id);
-          if (commentEl) DATA.saveAnswer(USER, q.id + '_comment', commentEl.value);
-        } else if (q.type === 'text') {
-          const el = document.querySelector('textarea[name="' + q.id + '"]');
-          if (el) DATA.saveAnswer(USER, q.id, el.value);
-        }
+        });
       });
       DATA.saveAnswer(USER, 'week_' + weekNum + '_complete', true);
       renderNav();
