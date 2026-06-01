@@ -10,6 +10,12 @@ const DATA = (() => {
     agenda:  'portland_agenda_text'
   };
 
+  // Gist ID for cross-device sync (public gist - safe in source)
+  const GIST_ID = '956257a8bffbe92c63a31e7253ff104c';
+  const GIST_RAW = 'https://gist.githubusercontent.com/sarahrrose/' + GIST_ID + '/raw/portland_responses.json';
+  // Token read from localStorage at runtime - never in source code
+  const getGistToken = () => localStorage.getItem('portland_gist_token');
+
   function getAnswers(user) {
     try { return JSON.parse(localStorage.getItem(KEYS[user]) || '{}'); }
     catch { return {}; }
@@ -18,6 +24,31 @@ const DATA = (() => {
     const answers = getAnswers(user);
     answers[questionId] = value;
     localStorage.setItem(KEYS[user], JSON.stringify(answers));
+    syncToGist();
+  }
+
+  async function syncToGist() {
+    const token = getGistToken();
+    if (!token) return;
+    try {
+      const payload = { jessica: getAnswers('jessica'), libby: getAnswers('libby') };
+      await fetch('https://api.github.com/gists/' + GIST_ID, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: { 'portland_responses.json': { content: JSON.stringify(payload, null, 2) } } })
+      });
+    } catch(e) { console.warn('Gist sync failed', e); }
+  }
+
+  async function loadFromGist() {
+    try {
+      const resp = await fetch(GIST_RAW + '?t=' + Date.now());
+      const payload = await resp.json();
+      Object.keys(payload).forEach(user => {
+        if (KEYS[user]) localStorage.setItem(KEYS[user], JSON.stringify(payload[user]));
+      });
+      return payload;
+    } catch(e) { console.warn('Gist load failed', e); return null; }
   }
   function getAnswer(user, questionId) {
     return getAnswers(user)[questionId];
@@ -174,5 +205,7 @@ function getInRunningPlaces() {
     getAgenda, saveAgenda,
     generateExport, buildAgendaPrompt,
     resetAll
+    loadFromGist,
+    syncToGist,
   };
 })();
