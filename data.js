@@ -204,7 +204,7 @@ function getInRunningPlaces() {
     getCustomQuestions, saveCustomQuestions,
     getAgenda, saveAgenda,
     generateExport, buildAgendaPrompt,
-    resetAll
+    resetAll,
     loadFromGist,
     syncToGist,
   };
