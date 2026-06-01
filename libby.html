@@ -23,6 +23,7 @@
     .week-header .intro { font-size: 0.9rem; color: #777; margin-top: 0.3rem; line-height: 1.5; }
     .question-card { background: white; border-radius: 12px; padding: 1.4rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     .question-text { font-size: 0.95rem; color: #333; line-height: 1.55; margin-bottom: 1rem; }
+    .q-num { font-weight: 700; color: #2d5016; font-size: 0.85rem; display: inline-block; margin-right: 0.3rem; }
     .place-image-wrap { margin-bottom: 1rem; }
     .place-image-wrap a { display: inline-block; border-radius: 8px; overflow: hidden; border: 1px solid #e8e2db; }
     .place-image-wrap img { width: 200px; height: 140px; object-fit: cover; display: block; }
@@ -144,55 +145,53 @@
       if (!sec) return;
       const contentEl = document.getElementById('week-content');
       contentEl.innerHTML = '';
-      sec.weeks.forEach(weekNum => renderWeekInto(contentEl, weekNum));
+      let qCounter = 1;
+      sec.weeks.forEach(weekNum => {
+        qCounter += renderWeekInto(contentEl, weekNum, sectionNum, qCounter);
+      });
     }
-
-    function renderWeekInto(container, weekNum) {
+    function renderWeekInto(container, weekNum, sectionNum, startQNum) {
       const wData = QUESTIONS.find(w => w.week === weekNum);
-      if (!wData) return;
+      if (!wData) return 0;
       const answers = DATA.getAnswers(USER);
-      const div = document.createElement('div');
-      div.className = 'week-section active';
-
-      let html = '<div class="week-header"><h2>' + (wData.title || 'Week ' + weekNum) + '</h2>';
+      let html = '<div class="week-section active">';
+      html += '<div class="week-header">';
       if (wData.intro) html += '<p class="intro">' + wData.intro + '</p>';
       html += '</div>';
-
+      let qIndex = startQNum || 1;
       wData.questions.forEach(q => {
         const val = answers[q.id] || '';
         let inputHTML = '';
-        if (q.type === 'text') {
-          inputHTML = '<textarea id="q_' + q.id + '" placeholder="Type here...">' + (val || '') + '</textarea>';
-        } else if (q.type === 'scale') {
-          const imgH = q.image ? '<div class="place-image-wrap"><a href="' + (q.imageLink || q.image) + '" target="_blank" rel="noopener"><img src="' + q.image + '" alt="' + (q.place || '') + '" loading="lazy"></a></div>' : '';
-          inputHTML = imgH + '<div class="scale-btns">' +
-            [1,2,3,4,5].map(n => '<button class="scale-btn' + (val == n ? ' selected' : '') + '" data-q="' + q.id + '" data-v="' + n + '" onclick="pickScale(this)">' + n + '</button>').join('') +
-            '</div>' +
-            '<div class="scale-labels"><span>' + (q.labels ? q.labels[0] : '') + '</span><span>' + (q.labels ? q.labels[1] : '') + '</span></div>' +
-            '<button class="no-pref-btn' + (val === 'no_pref' ? ' selected' : '') + '" data-q="' + q.id + '" onclick="pickNoPref(this)">No preference / unsure</button>';
-          if (q.note) inputHTML += '<p class="q-note">' + q.note + '</p>';
+        if (q.type === 'scale') {
+          const min = q.scale ? q.scale.min : 1;
+          const max = q.scale ? q.scale.max : 5;
+          const minLabel = q.scale && q.scale.labels ? q.scale.labels[0] : '';
+          const maxLabel = q.scale && q.scale.labels ? q.scale.labels[1] : '';
+          let opts = '';
+          for (let i = min; i <= max; i++) {
+            opts += '<label class="scale-opt' + (val == i ? ' selected' : '') + '"><input type="radio" name="' + q.id + '" value="' + i + '"' + (val == i ? ' checked' : '') + '>' + i + '</label>';
+          }
+          inputHTML = '<div class="scale-wrap">';
+          if (minLabel) inputHTML += '<span class="scale-label">' + minLabel + '</span>';
+          inputHTML += '<div class="scale-options">' + opts + '</div>';
+          if (maxLabel) inputHTML += '<span class="scale-label">' + maxLabel + '</span>';
+          inputHTML += '</div>';
+          if (q.image) {
+            inputHTML = '<div class="place-image-wrap"><a href="' + (q.imageLink || '#') + '" target="_blank"><img src="' + q.image + '" alt="' + (q.place || '') + '" class="place-img"></a></div>' + inputHTML;
+          }
+        } else if (q.type === 'text') {
+          inputHTML = '<textarea name="' + q.id + '" rows="3" placeholder="Your answer...">' + val + '</textarea>';
         }
-        html += '<div class="question-card"><p class="question-text">' + q.text + '</p>' + inputHTML + '</div>';
+        const labelPrefix = sectionNum > 0 ? '<span class="q-num">' + sectionNum + '.' + qIndex + '</span> ' : '';
+        html += '<div class="question-card">' + labelPrefix + '<p class="question-text">' + q.text + '</p>' + inputHTML + '</div>';
+        qIndex++;
       });
-
-      html += '<button class="save-btn" onclick="saveWeek(' + weekNum + ')">Save Week ' + (weekNum === 0 ? 'Intro' : weekNum) + '</button>';
-      div.innerHTML = html;
-      container.appendChild(div);
+      const saveLabel = weekNum === 0 ? 'Save Intro' : 'Save';
+      html += '<button class="save-btn" onclick="saveWeek(' + weekNum + ')">' + saveLabel + '</button>';
+      html += '</div>';
+      container.innerHTML += html;
+      return wData.questions.length;
     }
-
-    function pickScale(btn) {
-      const qId = btn.dataset.q;
-      document.querySelectorAll('.scale-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
-      document.querySelectorAll('.no-pref-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    }
-
-    function pickNoPref(btn) {
-      const qId = btn.dataset.q;
-      document.querySelectorAll('.scale-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    }
-
     function saveWeek(weekNum) {
       const wData = QUESTIONS.find(w => w.week === weekNum);
       if (!wData) return;
