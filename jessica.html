@@ -214,26 +214,33 @@
       return wData.questions.length;
     }
     function saveWeek(weekNum) {
-      const wData = QUESTIONS.find(w => w.week === weekNum);
-      if (!wData) return;
-      wData.questions.forEach(q => {
-        if (q.type === 'scale') {
-          const sel = document.querySelector('.scale-btn.selected[data-q="' + q.id + '"]');
-          const noPref = document.querySelector('.no-pref-btn.selected[data-q="' + q.id + '"]');
-          if (sel) {
-            DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
-            DATA.saveAnswer(USER, q.id + '_nopref', '');
-          } else if (noPref) {
-            DATA.saveAnswer(USER, q.id, '');
-            DATA.saveAnswer(USER, q.id + '_nopref', 'yes');
+      // First, save ALL weeks currently rendered in this section (not just weekNum)
+      // This prevents re-render from wiping unsaved answers in sibling weeks
+      const sec = SECTIONS.find(s => s.section === currentSection);
+      const weeksToSave = sec ? sec.weeks : [weekNum];
+      weeksToSave.forEach(function(wNum) {
+        const wData = QUESTIONS.find(w => w.week === wNum);
+        if (!wData) return;
+        wData.questions.forEach(function(q) {
+          if (q.type === 'scale') {
+            const sel = document.querySelector('.scale-btn.selected[data-q="' + q.id + '"]');
+            const noPref = document.querySelector('.no-pref-btn.selected[data-q="' + q.id + '"]');
+            if (sel) {
+              DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
+              DATA.saveAnswer(USER, q.id + '_nopref', '');
+            } else if (noPref) {
+              DATA.saveAnswer(USER, q.id, '');
+              DATA.saveAnswer(USER, q.id + '_nopref', 'yes');
+            }
+            const commentEl = document.getElementById('comment_' + q.id);
+            if (commentEl) DATA.saveAnswer(USER, q.id + '_comment', commentEl.value);
+          } else if (q.type === 'text') {
+            const el = document.querySelector('textarea[name="' + q.id + '"]');
+            if (el) DATA.saveAnswer(USER, q.id, el.value);
           }
-          const commentEl = document.getElementById('comment_' + q.id);
-          if (commentEl) DATA.saveAnswer(USER, q.id + '_comment', commentEl.value);
-        } else if (q.type === 'text') {
-          const el = document.querySelector('textarea[name="' + q.id + '"]');
-          if (el) DATA.saveAnswer(USER, q.id, el.value);
-        }
+        });
       });
+      // Mark only the clicked week as complete
       DATA.saveAnswer(USER, 'week_' + weekNum + '_complete', true);
       renderNav();
       renderSection(currentSection);
