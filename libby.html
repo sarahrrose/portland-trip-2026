@@ -117,6 +117,21 @@
       renderSection(currentSection);
     }
 
+    function selectScale(btn) {
+      const qId = btn.dataset.q;
+      document.querySelectorAll('.scale-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const noPref = document.querySelector('.no-pref-btn[data-q="' + qId + '"]');
+      if (noPref) noPref.classList.remove('selected');
+    }
+    function toggleNoPref(btn) {
+      const qId = btn.dataset.q;
+      const wasSelected = btn.classList.contains('selected');
+      btn.classList.toggle('selected');
+      if (!wasSelected) {
+        document.querySelectorAll('.scale-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
+      }
+    }
     function renderNav() {
       const nav = document.getElementById('week-nav');
       nav.innerHTML = SECTIONS.map(s => {
@@ -161,26 +176,29 @@
       let qIndex = startQNum || 1;
       wData.questions.forEach(q => {
         const val = answers[q.id] || '';
+        const commentVal = answers[q.id + '_comment'] || '';
+        const noPrefVal = answers[q.id + '_nopref'] || '';
         let inputHTML = '';
         if (q.type === 'scale') {
           const min = q.scale ? q.scale.min : 1;
           const max = q.scale ? q.scale.max : 5;
           const minLabel = q.scale && q.scale.labels ? q.scale.labels[0] : '';
           const maxLabel = q.scale && q.scale.labels ? q.scale.labels[1] : '';
-          let opts = '';
+          let btns = '';
           for (let i = min; i <= max; i++) {
-            opts += '<label class="scale-opt' + (val == i ? ' selected' : '') + '"><input type="radio" name="' + q.id + '" value="' + i + '"' + (val == i ? ' checked' : '') + '>' + i + '</label>';
+            btns += '<button type="button" class="scale-btn' + (val == i ? ' selected' : '') + '" data-q="' + q.id + '" data-v="' + i + '" onclick="selectScale(this)">' + i + '</button>';
           }
-          inputHTML = '<div class="scale-wrap">';
-          if (minLabel) inputHTML += '<span class="scale-label">' + minLabel + '</span>';
-          inputHTML += '<div class="scale-options">' + opts + '</div>';
-          if (maxLabel) inputHTML += '<span class="scale-label">' + maxLabel + '</span>';
-          inputHTML += '</div>';
           if (q.image) {
-            inputHTML = '<div class="place-image-wrap"><a href="' + (q.imageLink || '#') + '" target="_blank"><img src="' + q.image + '" alt="' + (q.place || '') + '" class="place-img"></a></div>' + inputHTML;
+            inputHTML += '<div class="place-image-wrap"><a href="' + (q.imageLink || '#') + '" target="_blank"><img src="' + q.image + '" alt="' + (q.place || '') + '" class="place-img"></a></div>';
           }
+          inputHTML += '<div class="scale-btns">' + btns + '</div>';
+          if (minLabel || maxLabel) {
+            inputHTML += '<div class="scale-labels"><span>' + minLabel + '</span><span>' + maxLabel + '</span></div>';
+          }
+          inputHTML += '<div class="no-pref-wrap"><button type="button" class="no-pref-btn' + (noPrefVal ? ' selected' : '') + '" data-q="' + q.id + '" onclick="toggleNoPref(this)">' + String.fromCharCode(10003) + ' No preference / Unsure</button></div>';
+          inputHTML += '<div class="comment-wrap"><div class="comment-label">Any notes or comments?</div><textarea class="comment-field" id="comment_' + q.id + '" placeholder="Optional...">' + commentVal + '</textarea></div>';
         } else if (q.type === 'text') {
-          inputHTML = '<textarea name="' + q.id + '" rows="3" placeholder="Your answer...">' + val + '</textarea>';
+          inputHTML = '<textarea class="comment-field" name="' + q.id + '" rows="3" placeholder="Your answer...">' + val + '</textarea>';
         }
         const labelPrefix = sectionNum > 0 ? '<span class="q-num">' + sectionNum + '.' + qIndex + '</span> ' : '';
         html += '<div class="question-card">' + labelPrefix + '<p class="question-text">' + q.text + '</p>' + inputHTML + '</div>';
@@ -196,14 +214,21 @@
       const wData = QUESTIONS.find(w => w.week === weekNum);
       if (!wData) return;
       wData.questions.forEach(q => {
-        if (q.type === 'text') {
-          const el = document.getElementById('q_' + q.id);
-          if (el) DATA.saveAnswer(USER, q.id, el.value);
-        } else if (q.type === 'scale') {
+        if (q.type === 'scale') {
           const sel = document.querySelector('.scale-btn.selected[data-q="' + q.id + '"]');
           const noPref = document.querySelector('.no-pref-btn.selected[data-q="' + q.id + '"]');
-          if (sel) DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
-          else if (noPref) DATA.saveAnswer(USER, q.id, 'no_pref');
+          if (sel) {
+            DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
+            DATA.saveAnswer(USER, q.id + '_nopref', '');
+          } else if (noPref) {
+            DATA.saveAnswer(USER, q.id, '');
+            DATA.saveAnswer(USER, q.id + '_nopref', 'yes');
+          }
+          const commentEl = document.getElementById('comment_' + q.id);
+          if (commentEl) DATA.saveAnswer(USER, q.id + '_comment', commentEl.value);
+        } else if (q.type === 'text') {
+          const el = document.querySelector('textarea[name="' + q.id + '"]');
+          if (el) DATA.saveAnswer(USER, q.id, el.value);
         }
       });
       DATA.saveAnswer(USER, 'week_' + weekNum + '_complete', true);
@@ -211,8 +236,6 @@
       renderSection(currentSection);
       document.getElementById('week-nav').scrollIntoView({ behavior: 'smooth' });
     }
-
-    init();
-  </script>
+    </script>
 </body>
 </html>
