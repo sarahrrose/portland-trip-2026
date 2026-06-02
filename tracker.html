@@ -118,7 +118,8 @@
         el.querySelector('.progress-count').textContent =
           Math.round(done / (total || 1) * 100) + '%';
       });
-    DATA.loadFromGist().then(() => init()).catch(() => init());
+    }
+        DATA.loadFromGist().then(() => init()).catch(() => init());
   </script>
 </body>
 </html>
