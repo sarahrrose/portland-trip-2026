@@ -20,7 +20,7 @@
     .week-section.active { display: block; }
     .week-header { margin-bottom: 1.2rem; }
     .week-header h2 { font-size: 1.2rem; color: #1a4a6a; }
-    .week-header .intro { font-size: 1.05rem; color: #3a3a3a; margin: 1rem auto 1.5rem; line-height: 1.6; text-align: center; font-style: italic; max-width: 520px; }
+    .week-header .intro { font-size: 0.9rem; color: #777; margin-top: 0.3rem; line-height: 1.5; }
     .question-card { background: white; border-radius: 12px; padding: 1.4rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     .question-text { font-size: 0.95rem; color: #333; line-height: 1.55; margin-bottom: 1rem; }
     .q-num { font-weight: 700; color: #2d5016; font-size: 0.85rem; display: inline-block; margin-right: 0.3rem; }
@@ -164,11 +164,6 @@
       sec.weeks.forEach(weekNum => {
         qCounter += renderWeekInto(contentEl, weekNum, sectionNum, qCounter);
       });
-      const sectionSaveBtn = document.createElement('button');
-      sectionSaveBtn.className = 'save-btn';
-      sectionSaveBtn.textContent = sectionNum === 0 ? 'Save Intro' : 'Save Section';
-      sectionSaveBtn.onclick = () => saveSection(sectionNum);
-      contentEl.appendChild(sectionSaveBtn);
     }
     function renderWeekInto(container, weekNum, sectionNum, startQNum) {
       const wData = QUESTIONS.find(w => w.week === weekNum);
@@ -209,6 +204,9 @@
         html += '<div class="question-card">' + labelPrefix + '<p class="question-text">' + q.text + '</p>' + inputHTML + '</div>';
         qIndex++;
       });
+      const saveLabel = weekNum === 0 ? 'Save Intro' : 'Save';
+      html += '<button class="save-btn" onclick="saveWeek(' + weekNum + ')">' + saveLabel + '</button>';
+      html += '</div>';
       container.innerHTML += html;
       return wData.questions.length;
     }
@@ -241,32 +239,6 @@
       renderNav();
       renderSection(currentSection);
       document.getElementById('week-nav').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function saveSection(sectionNum) {
-      const sec = SECTIONS.find(s => s.section === sectionNum);
-      if (!sec) return;
-      sec.weeks.forEach(weekNum => {
-        const weekQs = QUESTIONS.filter(w => w.week === weekNum);
-        weekQs.forEach(weekData => {
-          (weekData.questions || []).forEach(q => {
-            if (q.type === 'scale') {
-              const sel = document.querySelector('.scale-btn.selected[data-q="' + q.id + '"]');
-              if (sel) DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
-              const np = document.querySelector('.no-pref-btn.selected[data-q="' + q.id + '"]');
-              if (np) DATA.saveAnswer(USER, q.id, 'no-pref');
-              const comment = document.querySelector('textarea[data-q="' + q.id + '"]');
-              if (comment && comment.value.trim()) DATA.saveAnswer(USER, q.id + '_comment', comment.value.trim());
-            } else if (q.type === 'text') {
-              const inp = document.querySelector('[data-q="' + q.id + '"]');
-              if (inp && inp.value.trim()) DATA.saveAnswer(USER, q.id, inp.value.trim());
-            }
-          });
-        });
-        DATA.saveAnswer(USER, 'week_complete_' + weekNum, true);
-      });
-      renderSection(sectionNum);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
         init();
   </script>
