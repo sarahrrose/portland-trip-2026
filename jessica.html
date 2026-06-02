@@ -164,11 +164,13 @@
       const contentEl = document.getElementById('week-content');
       contentEl.innerHTML = '';
       let qCounter = 1;
-      const sectionSaveBtn = document.createElement('button');
-      sectionSaveBtn.className = 'save-btn';
-      sectionSaveBtn.textContent = sectionNum === 0 ? 'Save Intro' : 'Save Section';
-      sectionSaveBtn.onclick = () => saveSection(sectionNum);
-      contentEl.appendChild(sectionSaveBtn);
+      setTimeout(() => {
+        const sectionSaveBtn = document.createElement('button');
+        sectionSaveBtn.className = 'save-btn';
+        sectionSaveBtn.textContent = sectionNum === 0 ? 'Save Intro' : 'Save Section';
+        sectionSaveBtn.onclick = () => saveSection(sectionNum);
+        contentEl.appendChild(sectionSaveBtn);
+      }, 0);
       sec.weeks.forEach(weekNum => {
         qCounter += renderWeekInto(contentEl, weekNum, sectionNum, qCounter);
       });
