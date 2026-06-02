@@ -161,6 +161,17 @@
       const contentEl = document.getElementById('week-content');
       contentEl.innerHTML = '';
       let qCounter = 1;
+      setTimeout(() => {
+        const sectionSaveBtn = document.createElement('button');
+        sectionSaveBtn.className = 'save-btn';
+        sectionSaveBtn.textContent = sectionNum === 0 ? 'Save Intro' : 'Save Section';
+        sectionSaveBtn.onclick = () => saveSection(sectionNum);
+        const saveMsgEl = document.createElement('div');
+        saveMsgEl.id = 'save-msg-' + sectionNum;
+        saveMsgEl.style.cssText = 'display:none;color:#c0392b;background:#fdf0f0;border:1px solid #e8b4b4;border-radius:8px;padding:0.75rem 1rem;margin:0.5rem 0 0;font-size:0.9rem;text-align:center;';
+        contentEl.appendChild(saveMsgEl);
+        contentEl.appendChild(sectionSaveBtn);
+      }, 0);
       sec.weeks.forEach(weekNum => {
         qCounter += renderWeekInto(contentEl, weekNum, sectionNum, qCounter);
       });
@@ -210,35 +221,58 @@
       container.innerHTML += html;
       return wData.questions.length;
     }
-    function saveWeek(weekNum) {
-      const sec = SECTIONS.find(s => s.section === currentSection);
-      const weeksToSave = sec ? sec.weeks : [weekNum];
-      weeksToSave.forEach(function(wNum) {
-        const wData = QUESTIONS.find(w => w.week === wNum);
-        if (!wData) return;
-        wData.questions.forEach(function(q) {
-          if (q.type === 'scale') {
-            const sel = document.querySelector('.scale-btn.selected[data-q="' + q.id + '"]');
-            const noPref = document.querySelector('.no-pref-btn.selected[data-q="' + q.id + '"]');
-            if (sel) {
-              DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
-              DATA.saveAnswer(USER, q.id + '_nopref', '');
-            } else if (noPref) {
-              DATA.saveAnswer(USER, q.id, '');
-              DATA.saveAnswer(USER, q.id + '_nopref', 'yes');
+    function saveSection(sectionNum) {
+      const sec = SECTIONS.find(s => s.section === sectionNum);
+      if (!sec) return;
+
+      const unanswered = [];
+      let qCounter = 0;
+      sec.weeks.forEach(weekNum => {
+        const wQsV = QUESTIONS.filter(w => w.week === weekNum);
+        wQsV.forEach(weekData => {
+          (weekData.questions || []).forEach(q => {
+            if (q.type === 'scale') {
+              qCounter++;
+              const hasSel = document.querySelector('[data-qid="' + q.id + '"][data-selected="true"]');
+              const hasNp  = document.querySelector('[data-nopref="' + q.id + '"]');
+              if (!hasSel && !hasNp) unanswered.push(qCounter);
             }
-            const commentEl = document.getElementById('comment_' + q.id);
-            if (commentEl) DATA.saveAnswer(USER, q.id + '_comment', commentEl.value);
-          } else if (q.type === 'text') {
-            const el = document.querySelector('textarea[name="' + q.id + '"]');
-            if (el) DATA.saveAnswer(USER, q.id, el.value);
-          }
+          });
         });
       });
-      DATA.saveAnswer(USER, 'week_' + weekNum + '_complete', true);
+      if (unanswered.length > 0) {
+        const msgEl = document.getElementById('save-msg-' + sectionNum);
+        if (msgEl) {
+          msgEl.textContent = 'Please answer all questions before saving — ' + unanswered.length + ' still need' + (unanswered.length === 1 ? 's' : '') + ' a response.';
+          msgEl.style.display = 'block';
+          msgEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => { msgEl.style.display = 'none'; }, 6000);
+        }
+        return;
+      }
+
+      sec.weeks.forEach(weekNum => {
+        const weekQs = QUESTIONS.filter(w => w.week === weekNum);
+        weekQs.forEach(weekData => {
+          (weekData.questions || []).forEach(q => {
+            if (q.type === 'scale') {
+              const sel = document.querySelector('[data-qid="' + q.id + '"][data-selected="true"]');
+              const np  = document.querySelector('[data-nopref="' + q.id + '"]');
+              if (sel) DATA.saveAnswer(USER, q.id, parseInt(sel.dataset.v));
+              else if (np) DATA.saveAnswer(USER, q.id, 'no-pref');
+              const comment = document.querySelector('[data-comment="' + q.id + '"]');
+              if (comment && comment.value.trim()) DATA.saveAnswer(USER, q.id + '_comment', comment.value.trim());
+            } else if (q.type === 'text') {
+              const inp = document.querySelector('[data-textq="' + q.id + '"]');
+              if (inp && inp.value.trim()) DATA.saveAnswer(USER, q.id, inp.value.trim());
+            }
+          });
+        });
+        DATA.saveAnswer(USER, 'week_complete_' + weekNum, true);
+      });
       renderNav();
-      renderSection(currentSection);
-      document.getElementById('week-nav').scrollIntoView({ behavior: 'smooth' });
+      renderSection(sectionNum);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
         init();
   </script>
