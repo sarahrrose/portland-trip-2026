@@ -44,24 +44,7 @@
       text-align: center;
       padding: 1rem 0;
     }
-    .places-list { list-style: none; }
-    .place-item {
-      padding: 0.65rem 0;
-      border-bottom: 1px solid #f0ece6;
-      font-size: 0.98rem;
-      color: #333;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .place-item:last-child { border-bottom: none; }
-    .place-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #6b8e4e;
-      flex-shrink: 0;
-    }
+
     .back-link {
       display: inline-block;
       margin-top: 1rem;
@@ -71,18 +54,36 @@
     }
     .back-link:hover { text-decoration: underline; }
   
-    .place-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0; border-bottom: 1px solid #f0ece6; }
-    .place-item:last-child { border-bottom: none; }
-    .place-thumb { width: 70px; height: 50px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
-    .place-info { display: flex; flex-direction: column; gap: 0.2rem; }
-    .place-name { font-size: 0.95rem; color: #333; font-weight: normal; }
-    .place-score { font-size: 0.8rem; color: #888; letter-spacing: 0.03em; }
+    .coming-soon-box {
+      background: white;
+      border-radius: 12px;
+      padding: 1.4rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      border-left: 4px solid #2d5016;
+    }
+    .coming-soon-label {
+      font-size: 0.75rem;
+      font-weight: bold;
+      letter-spacing: 0.12em;
+      color: #2d5016;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .coming-soon-text {
+      color: #666;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>What's In the Running 🗺️</h1>
-    <p class="intro">Places and activities ranking highest from your survey responses. Once all surveys are complete, you'll have the opportunity to vote on your favorites.</p>
+    <div class="coming-soon-box">
+      <div class="coming-soon-label">COMING SOON</div>
+      <p class="coming-soon-text">Places and activities ranking highest from your survey responses. Once all surveys are complete, this page will update and you'll have an opportunity to vote on your favorites.</p>
+    </div>
 
     <div class="section">
       <h2>Survey Progress</h2>
@@ -96,13 +97,6 @@
       </div>
     </div>
 
-    <div class="section">
-      <h2>Scoring High ⭐</h2>
-      <ul class="places-list" id="places-list">
-        <li class="empty-msg">No places yet — check back as the weeks progress!</li>
-      </ul>
-    </div>
-
     <a class="back-link" href="index.html">← Back to home</a>
   </div>
 
@@ -111,29 +105,19 @@
   <script>
     function init() {
       ['jessica', 'libby'].forEach(user => {
-        const done  = DATA.completedWeeks(user).length;
-        const total = QUESTIONS.length;
+        let done = 0, total = 0;
+        QUESTIONS.forEach(w => {
+          (w.questions||[]).forEach(q => {
+            if (q.type !== 'scale') return;
+            total++;
+            const ans = DATA.getAnswer(user, q.id);
+            if (ans !== null && ans !== undefined) done++;
+          });
+        });
         const el    = document.getElementById('progress-' + user);
         el.querySelector('.progress-count').textContent =
           Math.round(done / (total || 1) * 100) + '%';
       });
-      const places = DATA.getInRunningPlaces();
-      const list   = document.getElementById('places-list');
-      if (places.length === 0) {
-        list.innerHTML = '<li class="empty-msg">No places yet — check back as the weeks progress!</li>';
-      } else {
-        list.innerHTML = places.map(p => {
-          const avg = p.scores.length ? (p.scores.reduce((s,v) => s+v, 0) / p.scores.length).toFixed(1) : '';
-          const stars = p.scores.length ? '★'.repeat(Math.round(parseFloat(avg))) + '☆'.repeat(5 - Math.round(parseFloat(avg))) : '';
-          const imgTag = p.image ? '<img src="' + p.image + '" alt="' + p.place + '" class="place-thumb">' : '';
-          return '<li class="place-item">' +
-            imgTag +
-            '<div class="place-info"><span class="place-name">' + p.place + '</span>' +
-            '<span class="place-score">' + stars + ' ' + avg + '</span></div>' +
-            '</li>';
-        }).join('');
-      }
-    }
     DATA.loadFromGist().then(() => init()).catch(() => init());
   </script>
 </body>
