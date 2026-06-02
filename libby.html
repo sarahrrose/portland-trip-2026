@@ -255,24 +255,80 @@
       });
     }
 
-    function saveSection(sectionNum, goNext) {
-      collectSectionAnswers(sectionNum, goNext);
-      renderNav();
-      if (goNext) {
-        const nextIdx = SECTIONS.findIndex(s => s.section === sectionNum);
-        const nextSec = SECTIONS[nextIdx + 1];
-        if (nextSec) {
-          currentSection = nextSec.section;
-          renderNav();
-          renderSection(nextSec.section);
-        } else {
-          renderSection(sectionNum);
+    function renderDone() {
+          const content = document.getElementById('week-content');
+          content.innerHTML = `
+            <div style="text-align:center;padding:2.5rem 1rem 3rem;">
+              <div style="font-size:2.5rem;margin-bottom:0.75rem;">🎉</div>
+              <h2 style="font-family:Georgia,serif;color:#2d5016;font-size:1.2rem;letter-spacing:0.04em;margin-bottom:0.6rem;">SURVEY SUCCESSFULLY COMPLETED</h2>
+              <p style="color:#7a6a5a;font-size:0.95rem;">Thanks! Sarah will use your answers to plan the perfect Portland trip.</p>
+            </div>
+          `;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-      } else {
-        renderSection(sectionNum);
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+        
+        function renderCompletion() {
+          let skippedCount = 0;
+          let firstSkippedSection = null;
+          SECTIONS.forEach(sec => {
+            if (sec.section === 0) return;
+            sec.weeks.forEach(weekNum => {
+              const wData = QUESTIONS.find(w => w.week === weekNum);
+              if (!wData) return;
+              (wData.questions || []).forEach(q => {
+                if (q.type !== 'scale') return;
+                const ans = DATA.getAnswer(USER, q.id);
+                if (ans === 'skipped' || ans === undefined || ans === null) {
+                  skippedCount++;
+                  if (firstSkippedSection === null) firstSkippedSection = sec.section;
+                }
+              });
+            });
+          });
+    
+          const content = document.getElementById('week-content');
+          if (skippedCount > 0) {
+            const secLabel = SECTIONS.find(s => s.section === firstSkippedSection)?.label || 'Section ' + firstSkippedSection;
+            content.innerHTML = `
+              <div style="text-align:center;padding:2.5rem 1rem 3rem;">
+                <div style="font-size:1.6rem;margin-bottom:0.75rem;">⚠️</div>
+                <h2 style="font-family:Georgia,serif;color:#5a3e28;font-size:1.2rem;letter-spacing:0.04em;margin-bottom:0.6rem;">THERE ARE A FEW SKIPPED QUESTIONS</h2>
+                <p style="color:#7a6a5a;font-size:0.95rem;margin-bottom:1.5rem;">Would you like to go back and answer them?</p>
+                <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+                  <button class='save-btn save-next-btn' style='flex:0 0 auto;padding:0.75rem 1.5rem;' onclick='renderSection(${firstSkippedSection})'>Go to ${secLabel}</button>
+                  <button class='save-btn save-later-btn' style='flex:0 0 auto;padding:0.75rem 1.5rem;' onclick='renderDone()'>Skip for Now</button>
+                </div>
+              </div>
+            `;
+          } else {
+            content.innerHTML = `
+              <div style="text-align:center;padding:2.5rem 1rem 3rem;">
+                <div style="font-size:2.5rem;margin-bottom:0.75rem;">🎉</div>
+                <h2 style="font-family:Georgia,serif;color:#2d5016;font-size:1.2rem;letter-spacing:0.04em;margin-bottom:0.6rem;">SURVEY SUCCESSFULLY COMPLETED</h2>
+                <p style="color:#7a6a5a;font-size:0.95rem;">Thanks! Sarah will use your answers to plan the perfect Portland trip.</p>
+              </div>
+            `;
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    
+        function saveSection(sectionNum, goNext) {
+          collectSectionAnswers(sectionNum, goNext);
+          renderNav();
+          if (goNext) {
+            const nextSec = SECTIONS.find(s => s.section === sectionNum + 1);
+            if (nextSec) {
+              renderNav();
+              renderSection(nextSec.section);
+            } else {
+              renderCompletion();
+              return;
+            }
+          } else {
+            renderSection(sectionNum);
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         init();
   </script>
