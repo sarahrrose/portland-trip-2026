@@ -228,7 +228,6 @@ function getInRunningPlaces() {
             fetch(SHEET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user, answers: answerArray }) });
       } catch(e) { console.warn('Sheet sync failed', e); }
   }
-}
 
   return {
     getAnswers, saveAnswer, getAnswer,
