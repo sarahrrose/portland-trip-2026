@@ -40,9 +40,6 @@
     .multi-opt.selected { background: #4a7fa5; border-color: #4a7fa5; color: white; }
     .text-input { width: 100%; padding: 0.6rem 0.8rem; border: 2px solid #e0dbd5; border-radius: 8px; font-size: 0.9rem; font-family: 'Georgia', serif; resize: vertical; min-height: 72px; }
     .text-input:focus { outline: none; border-color: #4a7fa5; }
-    .no-pref-wrap { margin-top: 0.8rem; }
-    .no-pref-btn { background: none; border: 1px dashed #c0b8b0; border-radius: 6px; color: #999; font-size: 0.8rem; font-family: 'Georgia', serif; padding: 0.3rem 0.75rem; cursor: pointer; transition: all 0.15s; }
-    .no-pref-btn.selected { border-color: #8a7a6a; background: #f0ece6; color: #5a4a3a; }
     .comment-wrap { margin-top: 0.8rem; }
     .comment-label { font-size: 0.78rem; color: #aaa; margin-bottom: 0.3rem; }
     .comment-field { width: 100%; padding: 0.5rem 0.7rem; border: 1px solid #e0dbd5; border-radius: 6px; font-size: 0.85rem; font-family: 'Georgia', serif; resize: vertical; min-height: 56px; color: #555; }
@@ -126,16 +123,6 @@
       const qId = btn.dataset.q;
       document.querySelectorAll('.scale-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      const noPref = document.querySelector('.no-pref-btn[data-q="' + qId + '"]');
-      if (noPref) noPref.classList.remove('selected');
-    }
-    function toggleNoPref(btn) {
-      const qId = btn.dataset.q;
-      const wasSelected = btn.classList.contains('selected');
-      btn.classList.toggle('selected');
-      if (!wasSelected) {
-        document.querySelectorAll('.scale-btn[data-q="' + qId + '"]').forEach(b => b.classList.remove('selected'));
-      }
     }
     function renderNav() {
       const nav = document.getElementById('week-nav');
@@ -209,7 +196,6 @@
       wData.questions.forEach(q => {
         const val = answers[q.id] || '';
         const commentVal = answers[q.id + '_comment'] || '';
-        const noPrefVal = answers[q.id + '_nopref'] || '';
         let inputHTML = '';
         if (q.type === 'scale') {
           const min = q.scale ? q.scale.min : 1;
@@ -227,7 +213,6 @@
           if (minLabel || maxLabel) {
             inputHTML += '<div class="scale-labels"><span>' + minLabel + '</span><span>' + maxLabel + '</span></div>';
           }
-          inputHTML += '<div class="no-pref-wrap"><button type="button" class="no-pref-btn' + (noPrefVal ? ' selected' : '') + '" data-q="' + q.id + '" onclick="toggleNoPref(this)">' + String.fromCharCode(10003) + ' No preference / Unsure</button></div>';
           inputHTML += '<div class="comment-wrap"><div class="comment-label">Any notes or comments?</div><textarea class="comment-field" id="comment_' + q.id + '" placeholder="Optional...">' + commentVal + '</textarea></div>';
         } else if (q.type === 'text') {
           inputHTML = '<textarea class="comment-field" name="' + q.id + '" rows="3" placeholder="Your answer...">' + val + '</textarea>';
@@ -249,12 +234,9 @@
         (wData.questions || []).forEach(q => {
           if (q.type === 'scale') {
             const selBtn = document.querySelector('.scale-btn.selected[data-q="' + q.id + '"]');
-            const npBtn  = document.querySelector('.no-pref-btn.selected[data-q="' + q.id + '"]');
             const commentEl = document.getElementById('comment_' + q.id);
             if (selBtn) {
               DATA.saveAnswer(USER, q.id, parseInt(selBtn.dataset.v));
-            } else if (npBtn) {
-              DATA.saveAnswer(USER, q.id, 'no-pref');
             } else if (markSkipped) {
               DATA.saveAnswer(USER, q.id, 'skipped');
             }
