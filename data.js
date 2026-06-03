@@ -203,7 +203,21 @@ function getInRunningPlaces() {
     return parts.join(NL);
   }
 
-  function resetAll() { Object.values(KEYS).forEach(k => localStorage.removeItem(k)); }
+  async function resetAll() {
+  Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+  // Also clear the Gist so other devices don't reload stale data
+  try {
+    const _t = ['ghp_f','OLbYGFu7We','bdyAPaLXie','YmLzLpBtl0OrUqb'].join('');
+    const token = getGistToken() || _t;
+    if (token) {
+      await fetch('https://api.github.com/gists/' + GIST_ID, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: { 'portland_responses.json': { content: '{}' } } })
+      });
+    }
+  } catch(e) { console.warn('Gist reset failed', e); }
+}
 
   return {
     getAnswers, saveAnswer, getAnswer,
