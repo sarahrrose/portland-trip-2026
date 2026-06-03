@@ -25,6 +25,7 @@ const DATA = (() => {
     answers[questionId] = value;
     localStorage.setItem(KEYS[user], JSON.stringify(answers));
     syncToGist();
+        syncToSheet(user);
   }
 
   async function syncToGist() {
@@ -218,6 +219,14 @@ function getInRunningPlaces() {
     }
   } catch(e) { console.warn('Gist reset failed', e); }
 }
+  async function syncToSheet(user) {
+      const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwqtLsOLfOaMwlB88Q_F1kjDpS0p7lPGrD2mzivPPZepGHQoxH-iowHEg7O882LuPSe/exec';
+      try {
+            const answers = getAnswers(user);
+            const answerArray = Object.entries(answers).map(([id, value]) => ({ id, value: String(value), comment: answers[id + '_comment'] || '' }));
+            if (answerArray.length === 0) return;
+            fetch(SHEET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user, answers: answerArray }) });
+      } catch(e) { console.warn('Sheet sync failed', e); }
 
   return {
     getAnswers, saveAnswer, getAnswer,
@@ -230,5 +239,6 @@ function getInRunningPlaces() {
     resetAll,
     loadFromGist,
     syncToGist,
+        syncToSheet,
   };
 })();
