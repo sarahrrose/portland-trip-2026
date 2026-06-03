@@ -161,7 +161,8 @@ const QUESTIONS = [
     { id: "w8q3a", type: "scale", text: "How appealing is a slow morning with coffee and a good book?", scale: { min: 1, max: 5, labels: ["Not my thing", "Love it!"] } },
     { id: "w8q3b", type: "scale", text: "How appealing is a nap or pool time in the afternoon?", scale: { min: 1, max: 5, labels: ["Not my thing", "Love it!"] } },
     { id: "w8q3c", type: "scale", text: "How appealing is wandering without a plan for a few hours?", scale: { min: 1, max: 5, labels: ["Not my thing", "Love it!"] } },
-    { id: "w8q4", type: "scale", text: "Would you want a totally unscheduled free day to do whatever you feel like?", scale: { min: 1, max: 5, labels: ["Prefer structure", "Absolutely yes!"] } }
+    { id: "w8q4", type: "scale", text: "Would you want a totally unscheduled free day to do whatever you feel like?", scale: { min: 1, max: 5, labels: ["Prefer structure", "Absolutely yes!"] } },
+    { id: "w8q5", type: "scale", text: "Portland has two great wellness spots worth knowing about. Cascada (Alberta Arts District) is an underground thermal springs retreat with five mineral pools, cold plunge, sauna, steam room, plus massages and facials. Knot Springs (Inner SE) offers contrast bathing, massage, facials, and foot rubs with soaking pools. How interested are you in building a spa/wellness session into the trip?", scale: { min: 1, max: 5, labels: ["Not for me", "Yes please!"] } }
   ]
 },
 
