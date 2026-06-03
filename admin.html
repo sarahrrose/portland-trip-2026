@@ -204,7 +204,10 @@ function populateAdmin() {
       const jVal = DATA.getAnswer('jessica', q.id);
       const lVal = DATA.getAnswer('libby', q.id);
       const fmt = v => !v && v !== 0 ? '<span style="color:#ccc">—</span>' : (Array.isArray(v) ? v.join(', ') : v);
-      return `<tr><td>Wk ${week.week}</td><td>${q.text.substring(0,60)}${q.text.length>60?'…':''}</td><td>${fmt(jVal)}</td><td>${fmt(lVal)}</td></tr>`;
+        const jCmt = DATA.getAnswer('jessica', q.id + '_comment');
+        const lCmt = DATA.getAnswer('libby', q.id + '_comment');
+        const cRow = (jCmt || lCmt) ? `<tr style="background:#fffbf0"><td></td><td style="color:#999;font-style:italic;font-size:11px;">↳ notes</td><td style="color:#555;font-size:11px;">${jCmt||''}</td><td style="color:#555;font-size:11px;">${lCmt||''}</td></tr>` : '';
+        return `<tr><td>Wk ${week.week}</td><td>${q.text.substring(0,60)}${q.text.length>60?'…':''}</td><td>${fmt(jVal)}</td><td>${fmt(lVal)}</td></tr>` + cRow;
     }).join('')
   ).join('');
 
