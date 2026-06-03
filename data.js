@@ -11,7 +11,7 @@ const DATA = (() => {
   };
 
   // Gist ID for cross-device sync (public gist - safe in source)
-  const GIST_ID = '956257a8bffbe92c63a31e7253ff104c';
+  const GIST_ID = '956257a8bffbe92c63a31e7253ff104c'
   const GIST_RAW = 'https://gist.githubusercontent.com/sarahrrose/' + GIST_ID + '/raw/portland_responses.json';
   // Token read from localStorage at runtime - never in source code
   const getGistToken = () => localStorage.getItem('portland_gist_token');
@@ -225,7 +225,7 @@ function getInRunningPlaces() {
             const answers = getAnswers(user);
             const answerArray = Object.entries(answers).map(([id, value]) => ({ id, value: String(value), comment: answers[id + '_comment'] || '' }));
             if (answerArray.length === 0) return;
-            fetch(SHEET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user, answers: answerArray }) });
+            fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user, answers: answerArray }) });
       } catch(e) { console.warn('Sheet sync failed', e); }
   }
 
