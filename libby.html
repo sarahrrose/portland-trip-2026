@@ -51,6 +51,7 @@
     .save-btn-wrap { display: flex; gap: 0.75rem; margin-top: 1.2rem; }
     .save-btn { flex: 1; }
     .save-later-btn { background: #4a7a3a; }
+    .save-inline-btn { background: #4a7a3a; display: block; width: 100%; margin: 0.5rem 0 1rem; }
     .save-next-btn { background: #2d5016; }
     .save-btn:hover { opacity: 0.88; }
     .save-btn:hover { opacity: 0.88; }
@@ -166,17 +167,29 @@
       contentEl.innerHTML = '';
       let qCounter = 1;
       setTimeout(() => {
+        // Insert inline save buttons after every 10th question card
+        const cards = contentEl.querySelectorAll('.question-card');
+        cards.forEach((card, idx) => {
+          if ((idx + 1) % 10 === 0 && idx + 1 < cards.length) {
+            const inlineSave = document.createElement('button');
+            inlineSave.className = 'save-btn save-inline-btn';
+            inlineSave.textContent = '\u2713 Save Progress';
+            inlineSave.onclick = (e) => {
+              e.preventDefault();
+              const y = inlineSave.getBoundingClientRect().top + window.scrollY;
+              saveSection(sectionNum, false);
+              window.scrollTo({ top: y - 80, behavior: 'instant' });
+            };
+            card.after(inlineSave);
+          }
+        });
+        // Save & Next Section button at the bottom
         const btnWrap = document.createElement('div');
         btnWrap.className = 'save-btn-wrap';
-        const btnLater = document.createElement('button');
-        btnLater.className = 'save-btn save-later-btn';
-        btnLater.textContent = 'Save for Later';
-        btnLater.onclick = () => saveSection(sectionNum, false);
         const btnNext = document.createElement('button');
         btnNext.className = 'save-btn save-next-btn';
         btnNext.textContent = 'Save & Next Section';
         btnNext.onclick = () => saveSection(sectionNum, true);
-        btnWrap.appendChild(btnLater);
         btnWrap.appendChild(btnNext);
         contentEl.appendChild(btnWrap);
       }, 0);
