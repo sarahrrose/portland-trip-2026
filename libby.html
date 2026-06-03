@@ -223,8 +223,6 @@
         html += '<div class="question-card">' + labelPrefix + '<p class="question-text">' + q.text + '</p>' + inputHTML + '</div>';
         qIndex++;
       });
-      const saveLabel = weekNum === 0 ? 'Save Intro' : 'Save';
-      html += '<button class="save-btn" onclick="saveWeek(' + weekNum + ')">' + saveLabel + '</button>';
       html += '</div>';
       container.innerHTML += html;
       return wData.questions.length;
