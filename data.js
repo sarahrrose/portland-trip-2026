@@ -25,7 +25,7 @@ const DATA = (() => {
     answers[questionId] = value;
     localStorage.setItem(KEYS[user], JSON.stringify(answers));
     syncToGist();
-        syncToSheet(user);
+    syncToSheet(user);
   }
 
   async function syncToGist() {
