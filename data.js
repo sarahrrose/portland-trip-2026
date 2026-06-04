@@ -69,6 +69,7 @@ const DATA = (() => {
     const qs = QUESTIONS.find(w => w.week === week);
     if (!qs) return false;
     const required = qs.questions.filter(q => q.type !== 'text');
+      if (required.length === 0) return false;
     return required.every(q => answers[q.id] !== undefined && answers[q.id] !== null && answers[q.id] !== '');
   }
   function completedWeeks(user) {
