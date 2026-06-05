@@ -36,7 +36,7 @@
   .export-box{width:100%;min-height:120px;padding:12px;border-radius:10px;border:2px solid var(--fern);font-size:11px;font-family:monospace;background:#fafafa;color:var(--text);resize:vertical;}
   .copy-btn{margin-top:8px;padding:10px 16px;border-radius:8px;background:var(--forest);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;border:none;cursor:pointer;}
   /* All answers table */
-  .answers-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .answers-table{width:100%;border-collpse:collapse;font-size:12px;}
   .answers-table th{background:var(--warm);padding:8px 10px;text-align:left;color:var(--forest);font-weight:600;}
   .answers-table td{padding:8px 10px;border-bottom:1px solid var(--fern);vertical-align:top;}
   .answers-table tr:hover td{background:var(--cream);}
@@ -129,6 +129,13 @@
   <div class="card">
     <div class="card-title">Generate the Portland Agenda</div>
     <div class="card-body">When you have enough responses (mid-August), click below to generate a personalized day-by-day itinerary using AI. The result will appear on the Agenda page.</div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;font-weight:500;">Claude API Key</label>
+      <input type="password" class="custom-input" id="claude-key-input" placeholder="sk-ant-..." style="width:100%;font-size:13px;"
+        oninput="localStorage.setItem('portland_claude_key',this.value)"
+        onfocus="this.type='text'"
+        onblur="this.type='password'">
+    </div>
     <button class="agenda-btn" id="generate-btn" onclick="generateAgenda()">🗺️ Generate the Portland Itinerary →</button>
     <div id="generating-indicator"><div class="spinner"></div>Building the perfect Portland itinerary…</div>
   </div>
@@ -185,6 +192,9 @@ function showAdmin() {
   document.getElementById('setup-mode').style.display = 'none';
   document.getElementById('login-mode').style.display = 'none';
   document.getElementById('admin-content').style.display = 'block';
+  const savedKey = localStorage.getItem('portland_claude_key') || '';
+  const keyInput = document.getElementById('claude-key-input');
+  if (keyInput && savedKey) keyInput.value = savedKey;
   populateAdmin();
 }
 
@@ -280,6 +290,12 @@ async function generateAgenda() {
     });
 
     const data = await response.json();
+    if (data.error) {
+      throw new Error(data.error.message || 'API error');
+    }
+    if (!data.content) {
+      throw new Error('Unexpected response: ' + JSON.stringify(data).substring(0, 200));
+    }
     const text = data.content.map(c => c.text || '').join('');
     DATA.saveAgenda(text);
     window.location.href = 'agenda.html';
